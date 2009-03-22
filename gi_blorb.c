@@ -1,14 +1,14 @@
 /* gi_blorb.c: Blorb library layer for Glk API.
-    gi_blorb version 1.3.
-    Designed by Andrew Plotkin <erkyrath@netcom.com>
+    gi_blorb version 1.4.
+    Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://www.eblong.com/zarf/glk/index.html
 
-    This file is copyright 1998-1999 by Andrew Plotkin. You may copy,
+    This file is copyright 1998-2000 by Andrew Plotkin. You may copy,
     distribute, and incorporate it into your own programs, by any means
     and under any conditions, as long as you do not modify it. You may
-    also modify this file, incorporate it into your own programs, 
+    also modify this file, incorporate it into your own programs,
     and distribute the modified version, as long as you retain a notice
-    in your program or documentation which mentions my name and the URL 
+    in your program or documentation which mentions my name and the URL
     shown above.
 */
 
@@ -547,7 +547,7 @@ static void giblorb_qsort(giblorb_resdesc_t **list, int len)
             list[ix] = list[jx-1];
             list[jx-1] = tmpptr;
         }
-	ix++;
+        ix++;
         /* Sort the halves. */
         giblorb_qsort(list+0, ix);
         giblorb_qsort(list+ix, len-ix);
@@ -562,13 +562,11 @@ giblorb_resdesc_t *giblorb_bsearch(giblorb_resdesc_t *sample,
     bot = 0;
     top = len;
     
-    while (1) {
+    while (bot < top) {
         val = (top+bot) / 2;
         res = sortsplot(list[val], sample);
         if (res == 0)
             return list[val];
-        if (bot >= top-1)
-            break;
         if (res < 0) {
             bot = val+1;
         }

@@ -1,11 +1,11 @@
 #ifndef GLK_H
 #define GLK_H
 
-/* glk.h: Header file for Glk API, version 0.52.
-    Designed by Andrew Plotkin <erkyrath@netcom.com>
+/* glk.h: Header file for Glk API, version 0.6.0.
+    Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://www.eblong.com/zarf/glk/index.html
 
-    This file is copyright 1998-1999 by Andrew Plotkin. You may copy,
+    This file is copyright 1998-2000 by Andrew Plotkin. You may copy,
     distribute, and incorporate it into your own programs, by any means
     and under any conditions, as long as you do not modify it. You may
     also modify this file, incorporate it into your own programs, 
@@ -24,6 +24,7 @@ typedef signed long glsi32;
     modules. */
 #define GLK_MODULE_IMAGE
 #define GLK_MODULE_SOUND
+#define GLK_MODULE_HYPERLINKS
 
 /* These types are opaque object identifiers. They're pointers to opaque
     C structures, which are defined differently by each library. */
@@ -46,6 +47,8 @@ typedef struct glk_schannel_struct *schanid_t;
 #define gestalt_Sound (8)
 #define gestalt_SoundVolume (9)
 #define gestalt_SoundNotify (10)
+#define gestalt_Hyperlinks (11)
+#define gestalt_HyperlinkInput (12)
 
 #define evtype_None (0)
 #define evtype_Timer (1)
@@ -55,6 +58,7 @@ typedef struct glk_schannel_struct *schanid_t;
 #define evtype_Arrange (5) 
 #define evtype_Redraw (6)
 #define evtype_SoundNotify (7)
+#define evtype_Hyperlink (8)
 
 typedef struct event_struct {
     glui32 type;
@@ -167,8 +171,9 @@ extern void glk_exit(void);
 extern void glk_set_interrupt_handler(void (*func)(void));
 extern void glk_tick(void);
 
-extern glui32 glk_gestalt(glui32 id, glui32 val);
-extern glui32 glk_gestalt_ext(glui32 id, glui32 val, void *ptr);
+extern glui32 glk_gestalt(glui32 sel, glui32 val);
+extern glui32 glk_gestalt_ext(glui32 sel, glui32 val, glui32 *arr, 
+    glui32 arrlen);
 
 extern unsigned char glk_char_to_lower(unsigned char ch);
 extern unsigned char glk_char_to_upper(unsigned char ch);
@@ -294,5 +299,14 @@ extern void glk_schannel_set_volume(schanid_t chan, glui32 vol);
 extern void glk_sound_load_hint(glui32 snd, glui32 flag);
 
 #endif /* GLK_MODULE_SOUND */
+
+#ifdef GLK_MODULE_HYPERLINKS
+
+extern void glk_set_hyperlink(glui32 linkval);
+extern void glk_set_hyperlink_stream(strid_t str, glui32 linkval);
+extern void glk_request_hyperlink_event(winid_t win);
+extern void glk_cancel_hyperlink_event(winid_t win);
+
+#endif /* GLK_MODULE_HYPERLINKS */
 
 #endif /* GLK_H */

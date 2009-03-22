@@ -1,8 +1,8 @@
 CheapGlk: Cheapass Implementation of the Glk API.
 
-CheapGlk Library: version 0.8.5.
-Glk API which this implements: version 0.5.2.
-Designed by Andrew Plotkin <erkyrath@netcom.com>
+CheapGlk Library: version 0.8.6.
+Glk API which this implements: version 0.6.0.
+Designed by Andrew Plotkin <erkyrath@eblong.com>
 http://www.eblong.com/zarf/glk/index.html
 
 This is source code for the simplest possible implementation of the Glk
@@ -166,6 +166,9 @@ print an accented character unless Gestalt reassures it that the output
 capacity is there.)
 
 * Version History
+
+0.8.6:
+    Upgraded to Glk API version 0.6.0; i.e., stubs for hyperlinks.
 
 0.8.5:
     Added a fflush(stdout) before input. This shouldn't be necessary in

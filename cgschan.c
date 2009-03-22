@@ -6,7 +6,7 @@
 /* The whole sound-channel situation is very simple for us;
    we don't support it. */
 
-#ifdef GLK_MODULE_IMAGE
+#ifdef GLK_MODULE_SOUND
 
 schanid_t glk_schannel_create(glui32 rock)
 {
@@ -58,4 +58,4 @@ void glk_sound_load_hint(glui32 snd, glui32 flag)
   gli_strict_warning("schannel_sound_load_hint: invalid id.");
 }
 
-#endif /* GLK_MODULE_IMAGE */
+#endif /* GLK_MODULE_SOUND */

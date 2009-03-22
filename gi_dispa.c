@@ -1,13 +1,13 @@
-/* gi_dispa.c: Dispatch layer for Glk API, version 0.52.
-    Designed by Andrew Plotkin <erkyrath@netcom.com>
+/* gi_dispa.c: Dispatch layer for Glk API, version 0.6.0.
+    Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://www.eblong.com/zarf/glk/index.html
 
-    This file is copyright 1998-1999 by Andrew Plotkin. You may copy,
+    This file is copyright 1998-2000 by Andrew Plotkin. You may copy,
     distribute, and incorporate it into your own programs, by any means
     and under any conditions, as long as you do not modify it. You may
-    also modify this file, incorporate it into your own programs, 
+    also modify this file, incorporate it into your own programs,
     and distribute the modified version, as long as you retain a notice
-    in your program or documentation which mentions my name and the URL 
+    in your program or documentation which mentions my name and the URL
     shown above.
 */
 
@@ -31,6 +31,7 @@
 static gidispatch_intconst_t intconstant_table[] = {
     { "evtype_Arrange", (5)  },
     { "evtype_CharInput", (2) },
+    { "evtype_Hyperlink", (8) },
     { "evtype_LineInput", (3) },
     { "evtype_MouseInput", (4) },
     { "evtype_None", (0) },
@@ -55,6 +56,8 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "gestalt_CharOutput_ExactPrint", (2) },
     { "gestalt_DrawImage", (7) },
     { "gestalt_Graphics", (6) },
+    { "gestalt_HyperlinkInput", (12) },
+    { "gestalt_Hyperlinks", (11) },
     { "gestalt_LineInput", (2) },
     { "gestalt_MouseInput", (4) },
     { "gestalt_Sound", (8) },
@@ -228,6 +231,12 @@ static gidispatch_function_t function_table[] = {
     { 0x00FB, glk_schannel_set_volume, "schannel_set_volume" },
     { 0x00FC, glk_sound_load_hint, "sound_load_hint" },
 #endif /* GLK_MODULE_SOUND */
+#ifdef GLK_MODULE_HYPERLINKS
+    { 0x0100, glk_set_hyperlink, "set_hyperlink" },
+    { 0x0101, glk_set_hyperlink_stream, "set_hyperlink_stream" },
+    { 0x0102, glk_request_hyperlink_event, "request_hyperlink_event" },
+    { 0x0103, glk_cancel_hyperlink_event, "cancel_hyperlink_event" },
+#endif /* GLK_MODULE_HYPERLINKS */
 };
 
 glui32 gidispatch_count_classes()
@@ -291,13 +300,14 @@ char *gidispatch_prototype(glui32 funcnum)
         case 0x0001: /* exit */
             return "0:";
         case 0x0002: /* set_interrupt_handler */
+            /* cannot be invoked through dispatch layer */
             return NULL;
         case 0x0003: /* tick */
             return "0:";
         case 0x0004: /* gestalt */
             return "3IuIu:Iu";
         case 0x0005: /* gestalt_ext */
-            return NULL;
+            return "4IuIu&#Iu:Iu";
         case 0x0020: /* window_iterate */
             return "3Qa<Iu:Qa";
         case 0x0021: /* window_get_rock */
@@ -456,7 +466,17 @@ char *gidispatch_prototype(glui32 funcnum)
         case 0x00FC: /* sound_load_hint */
             return "2IuIu:";
 #endif /* GLK_MODULE_SOUND */
-
+#ifdef GLK_MODULE_HYPERLINKS
+        case 0x0100: /* set_hyperlink */
+            return "1Iu:";
+        case 0x0101: /* set_hyperlink_stream */
+            return "2QbIu:";
+        case 0x0102: /* request_hyperlink_event */
+            return "1Qa:";
+        case 0x0103: /* cancel_hyperlink_event */
+            return "1Qa:";
+#endif /* GLK_MODULE_HYPERLINKS */
+            
         default:
             return NULL;
     }
@@ -469,6 +489,7 @@ void gidispatch_call(glui32 funcnum, glui32 numargs, gluniversal_t *arglist)
             glk_exit();
             break;
         case 0x0002: /* set_interrupt_handler */
+            /* cannot be invoked through dispatch layer */
             break;
         case 0x0003: /* tick */
             glk_tick();
@@ -477,6 +498,14 @@ void gidispatch_call(glui32 funcnum, glui32 numargs, gluniversal_t *arglist)
             arglist[3].uint = glk_gestalt(arglist[0].uint, arglist[1].uint);
             break;
         case 0x0005: /* gestalt_ext */
+            if (arglist[2].ptrflag) {
+                arglist[6].uint = glk_gestalt_ext(arglist[0].uint, arglist[1].uint,
+                    arglist[3].array, arglist[4].uint);
+            }
+            else {
+                arglist[4].uint = glk_gestalt_ext(arglist[0].uint, arglist[1].uint,
+                    NULL, 0);
+            }
             break;
         case 0x0020: /* window_iterate */
             if (arglist[1].ptrflag) 
@@ -896,6 +925,20 @@ void gidispatch_call(glui32 funcnum, glui32 numargs, gluniversal_t *arglist)
             glk_sound_load_hint(arglist[0].uint, arglist[1].uint);
             break;
 #endif /* GLK_MODULE_SOUND */
+#ifdef GLK_MODULE_HYPERLINKS
+        case 0x0100: /* set_hyperlink */
+            glk_set_hyperlink(arglist[0].uint);
+            break;
+        case 0x0101: /* set_hyperlink_stream */
+            glk_set_hyperlink_stream(arglist[0].opaqueref, arglist[1].uint);
+            break;
+        case 0x0102: /* request_hyperlink_event */
+            glk_request_hyperlink_event(arglist[0].opaqueref);
+            break;
+        case 0x0103: /* cancel_hyperlink_event */
+            glk_cancel_hyperlink_event(arglist[0].opaqueref);
+            break;
+#endif /* GLK_MODULE_HYPERLINKS */
             
         default:
             /* do nothing */

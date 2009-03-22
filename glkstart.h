@@ -1,6 +1,6 @@
 /* glkstart.h: Unix-specific header file for GlkTerm, CheapGlk, and XGlk
         (Unix implementations of the Glk API).
-    Designed by Andrew Plotkin <erkyrath@netcom.com>
+    Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://www.eblong.com/zarf/glk/index.html
 */
 

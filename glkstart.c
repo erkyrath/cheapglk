@@ -1,5 +1,5 @@
 /* glkstart.c: Unix-specific startup code -- sample file.
-    Designed by Andrew Plotkin <erkyrath@netcom.com>
+    Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://www.eblong.com/zarf/glk/index.html
 
     This is Unix startup code for the simplest possible kind of Glk
