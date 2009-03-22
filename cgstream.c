@@ -40,8 +40,15 @@ stream_t *gli_new_stream(int type, int readable, int writable,
     str->readable = readable;
     str->writable = writable;
     
+    str->prev = NULL;
     str->next = gli_streamlist;
     gli_streamlist = str;
+    if (str->next) {
+        str->next->prev = str;
+    }
+    
+    if (gli_register_obj)
+        str->disprock = (*gli_register_obj)(str, gidisp_Class_Stream);
     
     return str;
 }
@@ -49,7 +56,7 @@ stream_t *gli_new_stream(int type, int readable, int writable,
 void gli_delete_stream(stream_t *str)
 {
     window_t *win;
-    stream_t **strptr;
+    stream_t *prev, *next;
     
     if (str == gli_currentstr) {
         gli_currentstr = NULL;
@@ -67,7 +74,10 @@ void gli_delete_stream(stream_t *str)
             /* nothing necessary; the window is already being closed */
             break;
         case strtype_Memory: 
-            /* nothing necessary; the data is already there */
+            if (gli_unregister_arr) {
+                (*gli_unregister_arr)(str->buf, str->buflen, "&+#!Cn", 
+                    str->arrayrock);
+            }
             break;
         case strtype_File:
             /* close the FILE */
@@ -76,16 +86,17 @@ void gli_delete_stream(stream_t *str)
             break;
     }
     
-    /* yank str from the linked list. */
-    for (strptr = &(gli_streamlist); 
-        *strptr; 
-        strptr = &((*strptr)->next)) {
-        if (*strptr == str) {
-            *strptr = str->next;
-            break;
-        }
-    }
+    prev = str->prev;
+    next = str->next;
+    str->prev = NULL;
     str->next = NULL;
+
+    if (prev)
+        prev->next = next;
+    else
+        gli_streamlist = next;
+    if (next)
+        next->prev = prev;
     
     free(str);
 }
@@ -99,12 +110,10 @@ void gli_stream_fill_result(stream_t *str, stream_result_t *result)
     result->writecount = str->writecount;
 }
 
-void glk_stream_close(strid_t id, stream_result_t *result)
+void glk_stream_close(stream_t *str, stream_result_t *result)
 {
-    stream_t *str;
-
-    if (!id || !(str = IDToStream(id))) {
-        gli_strict_warning("stream_close: invalid id.");
+    if (!str) {
+        gli_strict_warning("stream_close: invalid ref.");
         return;
     }
     
@@ -117,16 +126,16 @@ void glk_stream_close(strid_t id, stream_result_t *result)
     gli_delete_stream(str);
 }
 
-strid_t glk_stream_open_memory(void *buf, glui32 buflen, glui32 fmode, 
+strid_t glk_stream_open_memory(char *buf, glui32 buflen, glui32 fmode, 
     glui32 rock)
 {
     stream_t *str;
-    
+
     if (fmode != filemode_Read 
         && fmode != filemode_Write 
         && fmode != filemode_ReadWrite) {
         gli_strict_warning("stream_open_memory: illegal filemode");
-        return 0;
+        return NULL;
     }
     
     str = gli_new_stream(strtype_Memory, 
@@ -135,7 +144,7 @@ strid_t glk_stream_open_memory(void *buf, glui32 buflen, glui32 fmode,
         rock);
     if (!str) {
         gli_strict_warning("stream_open_memory: unable to create stream.");
-        return 0;
+        return NULL;
     }
     
     if (buf && buflen) {
@@ -147,22 +156,24 @@ strid_t glk_stream_open_memory(void *buf, glui32 buflen, glui32 fmode,
             str->bufeof = buf;
         else
             str->bufeof = str->bufend;
+        if (gli_register_arr) {
+            str->arrayrock = (*gli_register_arr)(buf, buflen, "&+#!Cn");
+        }
     }
     
-    return StreamToID(str);
+    return str;
 }
 
-strid_t glk_stream_open_file(frefid_t frefid, glui32 fmode,
+strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
     glui32 rock)
 {
-    char modestr[16];
-    fileref_t *fref;
     stream_t *str;
+    char modestr[16];
     FILE *fl;
     
-    if (!frefid || !(fref = IDToFileref(frefid))) {
+    if (!fref) {
         gli_strict_warning("stream_open_file: invalid fileref id.");
-        return 0;
+        return NULL;
     }
     
     switch (fmode) {
@@ -186,7 +197,7 @@ strid_t glk_stream_open_file(frefid_t frefid, glui32 fmode,
     fl = fopen(fref->filename, modestr);
     if (!fl) {
         gli_strict_warning("stream_open_file: unable to open file.");
-        return 0;
+        return NULL;
     }
 
     str = gli_new_stream(strtype_File, 
@@ -196,56 +207,66 @@ strid_t glk_stream_open_file(frefid_t frefid, glui32 fmode,
     if (!str) {
         gli_strict_warning("stream_open_file: unable to create stream.");
         fclose(fl);
-        return 0;
+        return NULL;
     }
     
     str->file = fl;
     
-    return StreamToID(str);
+    return str;
 }
 
-strid_t glk_stream_iterate(strid_t id, glui32 *rockptr)
+strid_t gli_stream_open_pathname(char *pathname, int textmode,
+    glui32 rock)
 {
+    char modestr[16];
     stream_t *str;
+    FILE *fl;
+    
+    strcpy(modestr, "r");
+    if (!textmode)
+        strcat(modestr, "b");
+        
+    fl = fopen(pathname, modestr);
+    if (!fl) {
+        return NULL;
+    }
 
-    if (!id) {
-        if (gli_streamlist) {
-            if (rockptr)
-                *rockptr = gli_streamlist->rock;
-            return StreamToID(gli_streamlist);
-        }
-        else {
-            if (rockptr)
-                *rockptr = 0;
-            return 0;
-        }
+    str = gli_new_stream(strtype_File, 
+        TRUE, FALSE, rock);
+    if (!str) {
+        fclose(fl);
+        return NULL;
+    }
+    
+    str->file = fl;
+    
+    return str;
+}
+
+strid_t glk_stream_iterate(strid_t str, glui32 *rock)
+{
+    if (!str) {
+        str = gli_streamlist;
     }
     else {
-        str = IDToStream(id);
-        if (!str) {
-            gli_strict_warning("stream_iterate: invalid id.");
-            return 0;
-        }
         str = str->next;
-        if (str) {
-            if (rockptr)
-                *rockptr = str->rock;
-            return StreamToID(str);
-        }
-        else {
-            if (rockptr)
-                *rockptr = 0;
-            return 0;
-        }
     }
+    
+    if (str) {
+        if (rock)
+            *rock = str->rock;
+        return str;
+    }
+    
+    if (rock)
+        *rock = 0;
+    return NULL;
 }
 
-glui32 glk_stream_get_rock(strid_t id)
+glui32 glk_stream_get_rock(stream_t *str)
 {
-    stream_t *str;
-
-    if (!id || !(str = IDToStream(id))) {
-        gli_strict_warning("stream_get_rock: invalid id.");
+    if (!str) {
+        gli_strict_warning("stream_get_rock: invalid ref.");
         return 0;
     }
     
@@ -257,38 +278,23 @@ void gli_stream_set_current(stream_t *str)
     gli_currentstr = str;
 }
 
-void glk_stream_set_current(strid_t id)
+void glk_stream_set_current(stream_t *str)
 {
-    stream_t *str;
-    
-    if (!id) {
-        str = NULL;
-    }
-    else {
-        str = IDToStream(id);
-        if (!str) {
-            gli_strict_warning("stream_set_current: invalid id.");
-            return;
-        }
-    }
-
     gli_stream_set_current(str);
 }
 
 strid_t glk_stream_get_current()
 {
     if (gli_currentstr)
-        return StreamToID(gli_currentstr);
+        return gli_currentstr;
     else
-        return 0;
+        return NULL;
 }
 
-void glk_stream_set_position(strid_t id, glsi32 pos, glui32 seekmode)
+void glk_stream_set_position(stream_t *str, glsi32 pos, glui32 seekmode)
 {
-    stream_t *str;
-    
-    if (!id || !(str = IDToStream(id))) {
-        gli_strict_warning("stream_set_position: invalid id");
+    if (!str) {
+        gli_strict_warning("stream_set_position: invalid ref");
         return;
     }
 
@@ -320,12 +326,10 @@ void glk_stream_set_position(strid_t id, glsi32 pos, glui32 seekmode)
     }   
 }
 
-glui32 glk_stream_get_position(strid_t id)
+glui32 glk_stream_get_position(stream_t *str)
 {
-    stream_t *str;
-    
-    if (!id || !(str = IDToStream(id))) {
-        gli_strict_warning("stream_get_position: invalid id");
+    if (!str) {
+        gli_strict_warning("stream_get_position: invalid ref");
         return 0;
     }
 
@@ -431,7 +435,7 @@ void gli_stream_echo_line(stream_t *str, char *buf, glui32 len)
     gli_put_char(str, '\n');
 }
 
-static glui32 gli_get_char(stream_t *str)
+static glsi32 gli_get_char(stream_t *str)
 {
     if (!str || !str->readable)
         return -1;
@@ -453,7 +457,7 @@ static glui32 gli_get_char(stream_t *str)
             res = getc(str->file);
             if (res != -1) {
                 str->readcount++;
-                return (glui32)res;
+                return (glsi32)res;
             }
             else {
                 return -1;
@@ -558,11 +562,10 @@ void glk_put_char(unsigned char ch)
     gli_put_char(gli_currentstr, ch);
 }
 
-void glk_put_char_stream(strid_t id, unsigned char ch)
+void glk_put_char_stream(stream_t *str, unsigned char ch)
 {
-    stream_t *str;
-    if (!id || !(str = IDToStream(id))) {
-        gli_strict_warning("put_char_stream: invalid id");
+    if (!str) {
+        gli_strict_warning("put_char_stream: invalid ref");
         return;
     }
     gli_put_char(str, ch);
@@ -573,11 +576,10 @@ void glk_put_string(char *s)
     gli_put_buffer(gli_currentstr, s, strlen(s));
 }
 
-void glk_put_string_stream(strid_t id, char *s)
+void glk_put_string_stream(stream_t *str, char *s)
 {
-    stream_t *str;
-    if (!id || !(str = IDToStream(id))) {
-        gli_strict_warning("put_string_stream: invalid id");
+    if (!str) {
+        gli_strict_warning("put_string_stream: invalid ref");
         return;
     }
     gli_put_buffer(str, s, strlen(s));
@@ -588,11 +590,10 @@ void glk_put_buffer(char *buf, glui32 len)
     gli_put_buffer(gli_currentstr, buf, len);
 }
 
-void glk_put_buffer_stream(strid_t id, char *buf, glui32 len)
+void glk_put_buffer_stream(stream_t *str, char *buf, glui32 len)
 {
-    stream_t *str;
-    if (!id || !(str = IDToStream(id))) {
-        gli_strict_warning("put_string_stream: invalid id");
+    if (!str) {
+        gli_strict_warning("put_string_stream: invalid ref");
         return;
     }
     gli_put_buffer(str, buf, len);
@@ -603,41 +604,37 @@ void glk_set_style(glui32 val)
     /* This cheap library doesn't handle styles */
 }
 
-void glk_set_style_stream(strid_t id, glui32 val)
+void glk_set_style_stream(stream_t *str, glui32 val)
 {
-    stream_t *str;
-    if (!id || !(str = IDToStream(id))) {
-        gli_strict_warning("set_style_stream: invalid id");
+    if (!str) {
+        gli_strict_warning("set_style_stream: invalid ref");
         return;
     }
     /* This cheap library doesn't handle styles */
 }
 
-glui32 glk_get_char_stream(strid_t id)
+glsi32 glk_get_char_stream(stream_t *str)
 {
-    stream_t *str;
-    if (!id || !(str = IDToStream(id))) {
-        gli_strict_warning("get_char_stream: invalid id");
+    if (!str) {
+        gli_strict_warning("get_char_stream: invalid ref");
         return -1;
     }
     return gli_get_char(str);
 }
 
-glui32 glk_get_line_stream(strid_t id, char *buf, glui32 len)
+glui32 glk_get_line_stream(stream_t *str, char *buf, glui32 len)
 {
-    stream_t *str;
-    if (!id || !(str = IDToStream(id))) {
-        gli_strict_warning("get_line_stream: invalid id");
+    if (!str) {
+        gli_strict_warning("get_line_stream: invalid ref");
         return -1;
     }
     return gli_get_line(str, buf, len);
 }
 
-glui32 glk_get_buffer_stream(strid_t id, char *buf, glui32 len)
+glui32 glk_get_buffer_stream(stream_t *str, char *buf, glui32 len)
 {
-    stream_t *str;
-    if (!id || !(str = IDToStream(id))) {
-        gli_strict_warning("get_buffer_stream: invalid id");
+    if (!str) {
+        gli_strict_warning("get_buffer_stream: invalid ref");
         return -1;
     }
     return gli_get_buffer(str, buf, len);

@@ -12,7 +12,6 @@
     the output is in glk_put_char() etc.) */
 
 static window_t *mainwin = NULL;
-static winid_t mainwin_id = 0;
 
 window_t *gli_new_window(glui32 rock)
 {
@@ -32,11 +31,25 @@ window_t *gli_new_window(glui32 rock)
     win->linebuf = NULL;
     win->linebuflen = 0;
     
+    if (gli_register_obj)
+        win->disprock = (*gli_register_obj)(win, gidisp_Class_Window);
+    
     return win;
 }
 
 void gli_delete_window(window_t *win)
 {
+    if (win->linebuf) {
+        if (gli_unregister_arr) {
+            (*gli_unregister_arr)(win->linebuf, win->linebuflen, "&+#!Cn", 
+                win->inarrayrock);
+        }
+        win->linebuf = NULL;
+    }
+
+    if (gli_unregister_obj)
+        (*gli_unregister_obj)(win, gidisp_Class_Window, win->disprock);
+        
     win->magicnum = 0;
     
     /* Close window's stream. */
@@ -59,30 +72,29 @@ winid_t glk_window_open(winid_t split, glui32 method, glui32 size,
         /* This cheap library only allows you to open a window if there
             aren't any other windows. But it's legal for the program to
             ask for multiple windows. So we don't print a warning; we just
-            return 0. */
-        return 0;
+            return NULL. */
+        return NULL;
     }
     
     if (wintype != wintype_TextBuffer) {
         /* This cheap library only allows you to open text buffer windows. 
             Again, don't print a warning. */
-        return 0;
+        return NULL;
     }
     
     win = gli_new_window(rock);
     if (!win) {
         gli_strict_warning("window_open: unable to create window.");
-        return 0;
+        return NULL;
     }
     
     mainwin = win;
-    mainwin_id = WindowToID(mainwin);
-    return mainwin_id;
+    return mainwin;
 }
 
-void glk_window_close(winid_t id, stream_result_t *result)
+void glk_window_close(window_t *win, stream_result_t *result)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_close: invalid id.");
         return;
     }
@@ -91,7 +103,6 @@ void glk_window_close(winid_t id, stream_result_t *result)
     
     gli_delete_window(mainwin);
     mainwin = NULL;
-    mainwin_id = 0;
 }
 
 window_t *gli_window_get()
@@ -103,43 +114,43 @@ winid_t glk_window_get_root()
 {
     /* If there's a window, it's the root window. */
     if (mainwin)
-        return mainwin_id;
+        return mainwin;
     else
-        return 0;
+        return NULL;
 }
 
-winid_t glk_window_iterate(winid_t id, glui32 *rockptr)
+winid_t glk_window_iterate(window_t *win, glui32 *rockptr)
 {
     /* Iteration is really simple when there can only be one window. */
     
-    if (!id) {
+    if (!win) {
         /* They're asking for the first window. Return the main window 
             if it exists, or 0 if there is none. */
         if (!mainwin) {
             if (rockptr)
                 *rockptr = 0;
-            return 0;
+            return NULL;
         }
         
         if (rockptr)
             *rockptr = mainwin->rock;
-        return mainwin_id;
+        return mainwin;
     }
-    else if (id == mainwin_id) {
+    else if (win == mainwin) {
         /* They're asking for the next window. There is none. */
         if (rockptr)
             *rockptr = 0;
-        return 0;
+        return NULL;
     }
     else {
         gli_strict_warning("window_iterate: invalid id.");
-        return 0;
+        return NULL;
     }
 }
 
-glui32 glk_window_get_rock(winid_t id)
+glui32 glk_window_get_rock(window_t *win)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_get_rock: invalid id.");
         return 0;
     }
@@ -147,9 +158,9 @@ glui32 glk_window_get_rock(winid_t id)
     return mainwin->rock;
 }
 
-glui32 glk_window_get_type(winid_t id)
+glui32 glk_window_get_type(window_t *win)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_get_type: invalid id.");
         return 0;
     }
@@ -157,77 +168,74 @@ glui32 glk_window_get_type(winid_t id)
     return wintype_TextBuffer;
 }
 
-winid_t glk_window_get_parent(winid_t id)
+winid_t glk_window_get_parent(window_t *win)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_get_parent: invalid id.");
-        return 0;
+        return NULL;
     }
     
-    return 0;
+    return NULL;
 }
 
-strid_t glk_window_get_stream(winid_t id)
+winid_t glk_window_get_sibling(window_t *win)
+{
+    if (!win || win != mainwin) {
+        gli_strict_warning("window_get_sibling: invalid id.");
+        return NULL;
+    }
+    
+    return NULL;
+}
+
+strid_t glk_window_get_stream(window_t *win)
 {
     stream_t *str;
     
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_get_stream: invalid id.");
-        return 0;
+        return NULL;
     }
     
     str = mainwin->str;
     
-    return StreamToID(str);
+    return str;
 }
 
-void glk_window_set_echo_stream(winid_t id, strid_t strid)
+void glk_window_set_echo_stream(window_t *win, stream_t *str)
 {
-    stream_t *str;
-
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_set_echo_stream: invalid window id.");
         return;
     }
 
-    if (!strid) {
-        str = NULL;
-    }
-    else {
-        str = IDToStream(strid);
-        if (!str) {
-            gli_strict_warning("window_set_echo_stream: invalid stream id.");
-            return;
-        }
-    }
-    
     mainwin->echostr = str;
 }
 
-strid_t glk_window_get_echo_stream(winid_t id)
+strid_t glk_window_get_echo_stream(window_t *win)
 {
     stream_t *str;
     
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_get_echo_stream: invalid id.");
-        return 0;
+        return NULL;
     }
     
     str = mainwin->echostr;
     
     if (str)
-        return StreamToID(str);
+        return str;
     else
-        return 0;
+        return NULL;
 }
 
-void glk_set_window(winid_t id)
+void glk_set_window(window_t *win)
 {
-    if (!id) {
+    if (!win) {
         gli_stream_set_current(NULL);
     }
     else {
-        if (id != mainwin_id) {
+        if (win != mainwin) {
             gli_strict_warning("set_window: invalid id.");
             return;
         }
@@ -235,9 +243,9 @@ void glk_set_window(winid_t id)
     }
 }
 
-void glk_request_char_event(winid_t id)
+void glk_request_char_event(window_t *win)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("request_char_event: invalid id");
         return;
     }
@@ -250,9 +258,10 @@ void glk_request_char_event(winid_t id)
     mainwin->char_request = TRUE;
 }
 
-void glk_request_line_event(winid_t id, void *buf, glui32 maxlen, glui32 initlen)
+void glk_request_line_event(window_t *win, char *buf, glui32 maxlen, 
+    glui32 initlen)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("request_line_event: invalid id");
         return;
     }
@@ -265,11 +274,15 @@ void glk_request_line_event(winid_t id, void *buf, glui32 maxlen, glui32 initlen
     mainwin->line_request = TRUE;
     mainwin->linebuf = buf;
     mainwin->linebuflen = maxlen;
+
+    if (gli_register_arr) {
+        win->inarrayrock = (*gli_register_arr)(buf, maxlen, "&+#!Cn");
+    }
 }
 
-void glk_request_mouse_event(winid_t id)
+void glk_request_mouse_event(window_t *win)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("request_mouse_event: invalid id");
         return;
     }
@@ -277,9 +290,9 @@ void glk_request_mouse_event(winid_t id)
     return;
 }
 
-void glk_cancel_char_event(winid_t id)
+void glk_cancel_char_event(window_t *win)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("cancel_char_event: invalid id");
         return;
     }
@@ -287,7 +300,7 @@ void glk_cancel_char_event(winid_t id)
     mainwin->char_request = FALSE;
 }
 
-void glk_cancel_line_event(winid_t id, event_t *ev)
+void glk_cancel_line_event(window_t *win, event_t *ev)
 {
     event_t dummyev;
     
@@ -297,12 +310,17 @@ void glk_cancel_line_event(winid_t id, event_t *ev)
 
     gli_event_clearevent(ev);
     
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("cancel_line_event: invalid id");
         return;
     }
     
     if (mainwin->line_request) {
+        if (gli_unregister_arr) {
+            (*gli_unregister_arr)(mainwin->linebuf, mainwin->linebuflen, 
+                "&+#!Cn", mainwin->inarrayrock);
+        }
+
         mainwin->line_request = FALSE;
         mainwin->linebuf = NULL;
         mainwin->linebuflen = 0;
@@ -317,13 +335,13 @@ void glk_cancel_line_event(winid_t id, event_t *ev)
         ev->type = evtype_LineInput;
         ev->val1 = 0;
         ev->val2 = 0;
-        ev->win = mainwin_id;
+        ev->win = mainwin;
     }
 }
 
-void glk_cancel_mouse_event(winid_t id)
+void glk_cancel_mouse_event(window_t *win)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("cancel_mouse_event: invalid id");
         return;
     }
@@ -331,11 +349,11 @@ void glk_cancel_mouse_event(winid_t id)
     return;
 }
 
-void glk_window_clear(winid_t id)
+void glk_window_clear(window_t *win)
 {
     int ix;
     
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_clear: invalid id.");
         return;
     }
@@ -345,14 +363,14 @@ void glk_window_clear(winid_t id)
         return;
     }
 
-    for (ix=0; ix<screenheight; ix++) {
+    for (ix=0; ix<gli_screenheight; ix++) {
         putc('\n', stdout);
     }
 }
 
-void glk_window_move_cursor(winid_t id, glui32 xpos, glui32 ypos)
+void glk_window_move_cursor(window_t *win, glui32 xpos, glui32 ypos)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_move_cursor: invalid id.");
         return;
     }
@@ -360,24 +378,24 @@ void glk_window_move_cursor(winid_t id, glui32 xpos, glui32 ypos)
     gli_strict_warning("window_move_cursor: cannot move cursor in a TextBuffer window.");
 }
 
-void glk_window_get_size(winid_t id, glui32 *widthptr, 
+void glk_window_get_size(window_t *win, glui32 *widthptr, 
     glui32 *heightptr)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_get_size: invalid id.");
         return;
     }
     
     if (widthptr)
-        *widthptr = screenwidth;
+        *widthptr = gli_screenwidth;
     if (heightptr)
-        *heightptr = screenheight;
+        *heightptr = gli_screenheight;
 }
 
-void glk_window_get_arrangement(winid_t id, glui32 *methodptr,
+void glk_window_get_arrangement(window_t *win, glui32 *methodptr,
     glui32 *sizeptr, winid_t *keywinptr)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_get_arrangement: invalid id.");
         return;
     }
@@ -385,13 +403,58 @@ void glk_window_get_arrangement(winid_t id, glui32 *methodptr,
     gli_strict_warning("window_get_arrangement: not a Pair window.");
 }
 
-void glk_window_set_arrangement(winid_t id, glui32 method,
+void glk_window_set_arrangement(window_t *win, glui32 method,
     glui32 size, winid_t keywin)
 {
-    if (!id || id != mainwin_id) {
+    if (!win || win != mainwin) {
         gli_strict_warning("window_set_arrangement: invalid id.");
         return;
     }
     
     gli_strict_warning("window_set_arrangement: not a Pair window.");
 }
+
+#ifdef GLK_MODULE_IMAGE
+
+glui32 glk_image_draw(winid_t win, glui32 image, glsi32 val1, glsi32 val2)
+{
+    gli_strict_warning("image_draw: graphics not supported.");
+    return FALSE;
+}
+
+glui32 glk_image_draw_scaled(winid_t win, glui32 image, 
+    glsi32 val1, glsi32 val2, glui32 width, glui32 height)
+{
+    gli_strict_warning("image_draw_scaled: graphics not supported.");
+    return FALSE;
+}
+
+glui32 glk_image_get_info(glui32 image, glui32 *width, glui32 *height)
+{
+    gli_strict_warning("image_get_info: graphics not supported.");
+    return FALSE;
+}
+
+void glk_window_flow_break(winid_t win)
+{
+    gli_strict_warning("window_flow_break: graphics not supported.");
+}
+
+void glk_window_erase_rect(winid_t win, 
+    glsi32 left, glsi32 top, glui32 width, glui32 height)
+{
+    gli_strict_warning("window_erase_rect: graphics not supported.");
+}
+
+void glk_window_fill_rect(winid_t win, glui32 color, 
+    glsi32 left, glsi32 top, glui32 width, glui32 height)
+{
+    gli_strict_warning("window_fill_rect: graphics not supported.");
+}
+
+void glk_window_set_background_color(winid_t win, glui32 color)
+{
+    gli_strict_warning("window_set_background_color: graphics not supported.");
+}
+
+#endif /* GLK_MODULE_IMAGE */

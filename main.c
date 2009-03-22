@@ -2,14 +2,18 @@
 #include <stdlib.h>
 #include "glk.h"
 #include "cheapglk.h"
+#include "glkstart.h"
 
-int screenwidth = 80;
-int screenheight = 24; 
+int gli_screenwidth = 80;
+int gli_screenheight = 24; 
+
+static int inittime = FALSE;
 
 int main(int argc, char *argv[])
 {
-    int ix, val;
+    int ix, jx, val;
     int errflag = 0;
+    glkunix_startup_t startdata;
     
     /* Test for compile-time errors. If one of these spouts off, you
         must edit glk.h and recompile. */
@@ -22,9 +26,89 @@ int main(int argc, char *argv[])
         return 1;
     }
     
-    /* Suck out -w WIDTH and -h HEIGHT arguments. */
+    /* Now some argument-parsing. This is probably going to hurt. */
+    startdata.argc = 0;
+    startdata.argv = (char **)malloc(argc * sizeof(char *));
     
-    for (ix=1; ix<argc; ix++) {
+    /* Copy in the program name. */
+    startdata.argv[startdata.argc] = argv[0];
+    startdata.argc++;
+    
+    for (ix=1; ix<argc && !errflag; ix++) {
+        glkunix_argumentlist_t *argform;
+        int inarglist = FALSE;
+        char *cx;
+        
+        for (argform = glkunix_arguments; 
+            argform->argtype != glkunix_arg_End && !errflag; 
+            argform++) {
+            
+            if (argform->name[0] == '\0') {
+                if (argv[ix][0] != '-') {
+                    startdata.argv[startdata.argc] = argv[ix];
+                    startdata.argc++;
+                    inarglist = TRUE;
+                }
+            }
+            else if ((argform->argtype == glkunix_arg_NumberValue)
+                && !strncmp(argv[ix], argform->name, strlen(argform->name))
+                && (cx = argv[ix] + strlen(argform->name))
+                && (atoi(cx) != 0 || cx[0] == '0')) {
+                startdata.argv[startdata.argc] = argv[ix];
+                startdata.argc++;
+                inarglist = TRUE;
+            }
+            else if (!strcmp(argv[ix], argform->name)) {
+                int numeat = 0;
+                
+                if (argform->argtype == glkunix_arg_ValueFollows) {
+                    if (ix+1 >= argc) {
+                        printf("%s: %s must be followed by a value\n", 
+                            argv[0], argform->name);
+                        errflag = TRUE;
+                        break;
+                    }
+                    numeat = 2;
+                }
+                else if (argform->argtype == glkunix_arg_NoValue) {
+                    numeat = 1;
+                }
+                else if (argform->argtype == glkunix_arg_ValueCanFollow) {
+                    if (ix+1 < argc && argv[ix+1][0] != '-') {
+                        numeat = 2;
+                    }
+                    else {
+                        numeat = 1;
+                    }
+                }
+                else if (argform->argtype == glkunix_arg_NumberValue) {
+                    if (ix+1 >= argc
+                        || (atoi(argv[ix+1]) == 0 && argv[ix+1][0] != '0')) {
+                        printf("%s: %s must be followed by a number\n", 
+                            argv[0], argform->name);
+                        errflag = TRUE;
+                        break;
+                    }
+                    numeat = 2;
+                }
+                else {
+                    errflag = TRUE;
+                    break;
+                }
+                
+                for (jx=0; jx<numeat; jx++) {
+                    startdata.argv[startdata.argc] = argv[ix];
+                    startdata.argc++;
+                    if (jx+1 < numeat)
+                        ix++;
+                }
+                inarglist = TRUE;
+                break;
+            }
+        }
+        if (inarglist || errflag)
+            continue;
+            
         if (argv[ix][0] == '-') {
             switch (argv[ix][1]) {
                 case 'w':
@@ -39,7 +123,7 @@ int main(int argc, char *argv[])
                     if (val < 8)
                         errflag = 1;
                     else
-                        screenwidth = val;
+                        gli_screenwidth = val;
                     break;
                 case 'h':
                     val = 0;
@@ -53,7 +137,11 @@ int main(int argc, char *argv[])
                     if (val < 2)
                         errflag = 1;
                     else
-                        screenheight = val;
+                        gli_screenheight = val;
+                    break;
+                default:
+                    printf("%s: unknown option: %s\n", argv[0], argv[ix]);
+                    errflag = TRUE;
                     break;
             }
         }
@@ -61,12 +149,27 @@ int main(int argc, char *argv[])
 
     if (errflag) {
         printf("usage: %s -w WIDTH -h HEIGHT\n", argv[0]);
+        if (glkunix_arguments[0].argtype != glkunix_arg_End) {
+            glkunix_argumentlist_t *argform;
+            printf("game options:\n");
+            for (argform = glkunix_arguments; 
+                argform->argtype != glkunix_arg_End; 
+                argform++) {
+                printf("  %s\n", argform->desc);
+            }
+        }
         return 1;
     }
     
     /* Initialize things. */
     gli_initialize_misc();
     
+    inittime = TRUE;
+    if (!glkunix_startup_code(&startdata)) {
+        glk_exit();
+    }
+    inittime = FALSE;
+
     printf("Welcome to the Cheap Glk Implementation, library version %s.\n\n", 
         LIBRARY_VERSION);
     glk_main();
@@ -75,4 +178,12 @@ int main(int argc, char *argv[])
     /* glk_exit() doesn't return, but the compiler may kvetch if main()
         doesn't seem to return a value. */
     return 0;
+}
+
+strid_t glkunix_stream_open_pathname(char *pathname, glui32 textmode, 
+    glui32 rock)
+{
+    if (!inittime)
+        return 0;
+    return gli_stream_open_pathname(pathname, (textmode != 0), rock);
 }
