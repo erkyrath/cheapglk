@@ -3,13 +3,13 @@
 
 /* cheapglk.h: Private header file for Cheapass Implementation of the 
         Glk API.
-    CheapGlk Library: version 0.8.7.
-    Glk API which this implements: version 0.6.1.
+    CheapGlk Library: version 0.9.0.
+    Glk API which this implements: version 0.7.0.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://www.eblong.com/zarf/glk/index.html
 */
 
-#define LIBRARY_VERSION "0.8.7"
+#define LIBRARY_VERSION "0.9.0"
 
 #include "gi_dispa.h"
 
@@ -34,7 +34,8 @@
 /* The overall screen size, as set by command-line options. A
     better implementation would check the real screen size
     somehow. */
-extern int gli_screenwidth, gli_screenheight; 
+extern int gli_screenwidth, gli_screenheight;
+extern int gli_utf8output, gli_utf8input;
 
 /* Callbacks necessary for the dispatch layer. */
 extern gidispatch_rock_t (*gli_register_obj)(void *obj, glui32 objclass);
@@ -64,7 +65,9 @@ struct glk_window_struct {
     stream_t *echostr; /* the window's echo stream, if any. */
     
     int line_request;
+    int line_request_uni;
     int char_request;
+    int char_request_uni;
     
     void *linebuf;
     glui32 linebuflen;
@@ -80,6 +83,7 @@ struct glk_stream_struct {
     glui32 rock;
 
     int type; /* file, window, or memory stream */
+    int unicode; /* one-byte or four-byte chars? Not meaningful for windows */
     
     glui32 readcount, writecount;
     int readable, writable;
@@ -90,11 +94,16 @@ struct glk_stream_struct {
     /* for strtype_File */
     FILE *file; 
     
-    /* for strtype_Memory */
+    /* for strtype_Memory. Separate pointers for one-byte and four-byte
+       streams */
     unsigned char *buf;
     unsigned char *bufptr;
     unsigned char *bufend;
     unsigned char *bufeof;
+    glui32 *ubuf;
+    glui32 *ubufptr;
+    glui32 *ubufend;
+    glui32 *ubufeof;
     glui32 buflen;
     gidispatch_rock_t arrayrock;
 
@@ -114,6 +123,14 @@ struct glk_fileref_struct {
     fileref_t *next, *prev; /* in the big linked list of filerefs */
 };
 
+typedef glui32 gli_case_block_t[2]; /* upper, lower */
+/* If both are 0xFFFFFFFF, you have to look at the special-case table */
+
+typedef glui32 gli_case_special_t[3]; /* upper, lower, title */
+/* Each of these points to a subarray of the unigen_special_array
+   (in cgunicode.c). In that subarray, element zero is the length,
+   and that's followed by length unicode values. */
+
 /* Declarations of library internal functions. */
 
 extern void gli_initialize_misc(void);
@@ -131,10 +148,15 @@ extern void gli_stream_set_current(stream_t *str);
 extern void gli_stream_fill_result(stream_t *str, 
     stream_result_t *result);
 extern void gli_stream_echo_line(stream_t *str, char *buf, glui32 len);
+extern void gli_stream_echo_line_uni(stream_t *str, glui32 *buf, glui32 len);
 
 extern fileref_t *gli_new_fileref(char *filename, glui32 usage, 
     glui32 rock);
 extern void gli_delete_fileref(fileref_t *fref);
+
+extern void gli_putchar_utf8(glui32 val, FILE *fl);
+extern glui32 gli_parse_utf8(unsigned char *buf, glui32 buflen,
+    glui32 *out, glui32 outlen);
 
 /* A macro that I can't think of anywhere else to put it. */
 

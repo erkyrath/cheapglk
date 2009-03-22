@@ -1,7 +1,7 @@
 CheapGlk: Cheapass Implementation of the Glk API.
 
-CheapGlk Library: version 0.8.7.
-Glk API which this implements: version 0.6.1.
+CheapGlk Library: version 0.9.0.
+Glk API which this implements: version 0.7.0.
 Designed by Andrew Plotkin <erkyrath@eblong.com>
 http://www.eblong.com/zarf/glk/index.html
 
@@ -23,6 +23,10 @@ itself:
     -w NUM, -h NUM: These set the screen width and height manually. This
 is only used when trying to "clear" the screen (by printing a bunch of
 newlines.)
+
+    -ui: Assume that stdin contains UTF-8 encoded text.
+    -uo: Generate UTF-8 encoded text on stdout.
+    -u: Both of the above.
 
 * Notes on building this mess:
 
@@ -150,22 +154,34 @@ stdio library. The likely trouble spots are glk_fileref_delete_file()
 and glk_fileref_does_file_exist() -- I've implemented them with the
 Unix calls unlink() and stat() respectively.
 
-The character-encoding problem is pretty much ignored here (like most of
-the more complicated Glk issues.) This source code assumes that players
-can only type the standard ASCII characters (32 to 126), and also that
-the display (wherever stdout goes) can only display the same. It tells
-these facts to the game via the character I/O Gestalt selectors. So
-really, if the player *can* type accented characters, you'll have to
-modify this code to transform them to Latin-1 encoding (if necessary)
-and also change the Gestalt responses. Similarly, if displaying accented
-characters is possible, you'll have to write code to transform Latin-1
-to the platform-native encoding (if necessary) and again change Gestalt.
+The character-encoding problem is pretty much ignored here (like most
+of the more complicated Glk issues.) By default, this source code
+assumes that players can only type the standard ASCII characters (32
+to 126), and also that the display (wherever stdout goes) can only
+display the same. It tells these facts to the game via the character
+I/O Gestalt selectors. So really, if the player *can* type accented
+characters, you'll have to modify this code to transform them to
+Latin-1 encoding (if necessary) and also change the Gestalt responses.
+Similarly, if displaying accented characters is possible, you'll have
+to write code to transform Latin-1 to the platform-native encoding (if
+necessary) and again change Gestalt.
 
 (The Gestalt step is important! A well-written game will not even try to
 print an accented character unless Gestalt reassures it that the output
 capacity is there.)
 
+New in version 0.9 is the "-u" argument. This tells CheapGlk that its
+stdin and stdout are attached to a terminal (or other device) which
+does UTF-8 encoding and decoding. (For example, the MacOSX Terminal
+app. Be sure to *uncheck* the "Use option key as meta key" preference,
+or Unicode input will fail.) In "-u" mode, CheapGlk declares that it
+can input and output all Unicode characters.
+
 * Version History
+
+0.9.0:
+    Upgraded to Glk API version 0.7.0; added the Unicode functions.
+    Added the -u option.
 
 0.8.7:
     Upgraded to Glk API version 0.6.1; i.e., a couple of new gestalt

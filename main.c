@@ -6,6 +6,8 @@
 
 int gli_screenwidth = 80;
 int gli_screenheight = 24; 
+int gli_utf8output = FALSE;
+int gli_utf8input = FALSE;
 
 static int inittime = FALSE;
 
@@ -139,6 +141,20 @@ int main(int argc, char *argv[])
                     else
                         gli_screenheight = val;
                     break;
+                case 'u':
+                    if (argv[ix][2]) {
+                        if (argv[ix][2] == 'i') 
+                            gli_utf8input = TRUE;
+                        else if (argv[ix][2] == 'o')
+                            gli_utf8output = TRUE;
+                        else
+                            errflag = 1;
+                    }
+                    else {
+                        gli_utf8output = TRUE;
+                        gli_utf8input = TRUE;
+                    }
+                    break;
                 default:
                     printf("%s: unknown option: %s\n", argv[0], argv[ix]);
                     errflag = TRUE;
@@ -148,7 +164,7 @@ int main(int argc, char *argv[])
     }
 
     if (errflag) {
-        printf("usage: %s -w WIDTH -h HEIGHT\n", argv[0]);
+        printf("usage: %s -w WIDTH -h HEIGHT -u[i|o]\n", argv[0]);
         if (glkunix_arguments[0].argtype != glkunix_arg_End) {
             glkunix_argumentlist_t *argform;
             printf("game options:\n");

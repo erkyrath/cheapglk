@@ -86,6 +86,7 @@ void glk_select(event_t *event)
     if (win->char_request) {
         char buf[256];
         glui32 kval;
+        int len;
         
         /* How cheap are we? We don't want to fiddle with line 
             buffering, so we just accept an entire line (terminated by 
@@ -94,9 +95,26 @@ void glk_select(event_t *event)
             if we could recognize them.) */
  
         fgets(buf, 255, stdin);
-        kval = buf[0];
-        if (kval == '\r' || kval == '\n')
+        if (!gli_utf8input) {
+            kval = buf[0];
+        }
+        else {
+            int val;
+            val = strlen(buf);
+            if (val && (buf[val-1] == '\n' || buf[val-1] == '\r'))
+                val--;
+            len = gli_parse_utf8(buf, val, &kval, 1);
+            if (!len)
+                kval = '\n';
+        }
+
+        if (kval == '\r' || kval == '\n') {
             kval = keycode_Return;
+        }
+        else {
+            if (!win->char_request_uni && kval >= 0x100)
+                kval = '?';
+        }
         
         win->char_request = FALSE;
         event->type = evtype_CharInput;
@@ -105,26 +123,72 @@ void glk_select(event_t *event)
         
     }
     else {
+        /* line_request */
         char buf[256];
         int val;
+        glui32 ix;
+
         fgets(buf, 255, stdin);
         val = strlen(buf);
         if (val && (buf[val-1] == '\n' || buf[val-1] == '\r'))
             val--;
-        
-        if (val > win->linebuflen)
-            val = win->linebuflen;
-        memcpy(win->linebuf, buf, val);
-        if (win->echostr) {
-            gli_stream_echo_line(win->echostr, buf, val);
+
+        if (!gli_utf8input) {
+            if (val > win->linebuflen)
+                val = win->linebuflen;
+            if (!win->line_request_uni) {
+                memcpy(win->linebuf, buf, val);
+            }
+            else {
+                glui32 *destbuf = (glui32 *)win->linebuf;
+                for (ix=0; ix<val; ix++)
+                    destbuf[ix] = (glui32)(((unsigned char *)buf)[ix]);
+            }
         }
-        
+        else {
+            glui32 ubuf[256];
+            val = gli_parse_utf8(buf, val, ubuf, 256);
+            if (val > win->linebuflen)
+                val = win->linebuflen;
+            if (!win->line_request_uni) {
+                unsigned char *destbuf = (unsigned char *)win->linebuf;
+                for (ix=0; ix<val; ix++) {
+                    glui32 kval = ubuf[ix];
+                    if (kval >= 0x100)
+                        kval = '?';
+                    destbuf[ix] = kval;
+                }
+            }
+            else {
+                /* We ought to perform Unicode Normalization Form C here. */
+                glui32 *destbuf = (glui32 *)win->linebuf;
+                for (ix=0; ix<val; ix++)
+                    destbuf[ix] = ubuf[ix];
+            }
+        }
+
+        if (!win->line_request_uni) {
+            if (win->echostr) {
+                gli_stream_echo_line(win->echostr, win->linebuf, val);
+            }
+        }
+        else {
+            if (win->echostr) {
+                gli_stream_echo_line_uni(win->echostr, win->linebuf, val);
+            }
+        }
+
         if (gli_unregister_arr) {
-            (*gli_unregister_arr)(win->linebuf, win->linebuflen, 
-                "&+#!Cn", win->inarrayrock);
+            if (!win->line_request_uni)
+                (*gli_unregister_arr)(win->linebuf, win->linebuflen, 
+                    "&+#!Cn", win->inarrayrock);
+            else
+                (*gli_unregister_arr)(win->linebuf, win->linebuflen, 
+                    "&+#!Iu", win->inarrayrock);
         }
 
         win->line_request = FALSE;
+        win->line_request_uni = FALSE;
         win->linebuf = NULL;
         event->type = evtype_LineInput;
         event->win = win;

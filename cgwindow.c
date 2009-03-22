@@ -28,6 +28,8 @@ window_t *gli_new_window(glui32 rock)
     
     win->line_request = FALSE;
     win->char_request = FALSE;
+    win->line_request_uni = FALSE;
+    win->char_request_uni = FALSE;
     win->linebuf = NULL;
     win->linebuflen = 0;
     
@@ -260,6 +262,7 @@ void glk_request_char_event(window_t *win)
     }
     
     mainwin->char_request = TRUE;
+    mainwin->char_request_uni = FALSE;
 }
 
 void glk_request_line_event(window_t *win, char *buf, glui32 maxlen, 
@@ -276,6 +279,7 @@ void glk_request_line_event(window_t *win, char *buf, glui32 maxlen,
     }
     
     mainwin->line_request = TRUE;
+    mainwin->line_request_uni = FALSE;
     mainwin->linebuf = buf;
     mainwin->linebuflen = maxlen;
 
@@ -283,6 +287,49 @@ void glk_request_line_event(window_t *win, char *buf, glui32 maxlen,
         win->inarrayrock = (*gli_register_arr)(buf, maxlen, "&+#!Cn");
     }
 }
+
+#ifdef GLK_MODULE_UNICODE
+
+void glk_request_char_event_uni(window_t *win)
+{
+    if (!win || win != mainwin) {
+        gli_strict_warning("request_char_event: invalid id");
+        return;
+    }
+    
+    if (mainwin->char_request || mainwin->line_request) {
+        gli_strict_warning("request_char_event: window already has keyboard request");
+        return;
+    }
+    
+    mainwin->char_request = TRUE;
+    mainwin->char_request_uni = TRUE;
+}
+
+void glk_request_line_event_uni(window_t *win, glui32 *buf, glui32 maxlen, 
+    glui32 initlen)
+{
+    if (!win || win != mainwin) {
+        gli_strict_warning("request_line_event: invalid id");
+        return;
+    }
+    
+    if (mainwin->char_request || mainwin->line_request) {
+        gli_strict_warning("request_line_event: window already has keyboard request");
+        return;
+    }
+    
+    mainwin->line_request = TRUE;
+    mainwin->line_request_uni = TRUE;
+    mainwin->linebuf = buf;
+    mainwin->linebuflen = maxlen;
+
+    if (gli_register_arr) {
+        win->inarrayrock = (*gli_register_arr)(buf, maxlen, "&+#!Iu");
+    }
+}
+
+#endif /* GLK_MODULE_UNICODE */
 
 void glk_request_mouse_event(window_t *win)
 {
@@ -321,8 +368,10 @@ void glk_cancel_line_event(window_t *win, event_t *ev)
     
     if (mainwin->line_request) {
         if (gli_unregister_arr) {
+            /* This could be a char array or a glui32 array. */
+            char *typedesc = (mainwin->line_request_uni ? "&+#!Iu" : "&+#!Cn");
             (*gli_unregister_arr)(mainwin->linebuf, mainwin->linebuflen, 
-                "&+#!Cn", mainwin->inarrayrock);
+                typedesc, mainwin->inarrayrock);
         }
 
         mainwin->line_request = FALSE;

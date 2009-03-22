@@ -17,7 +17,7 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr,
     switch (id) {
         
         case gestalt_Version:
-            return 0x00000601;
+            return 0x00000700;
         
         case gestalt_LineInput:
             if (val >= 32 && val < 127)
@@ -30,8 +30,16 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr,
                 return TRUE;
             else if (val == keycode_Return)
                 return TRUE;
-            else
+            else {
+                /* If we're doing UTF-8 input, we can input any Unicode
+                   character. Except control characters. */
+                if (gli_utf8input) {
+                    if (val >= 160 && val < 0x200000)
+                        return TRUE;
+                }
+                /* If not, we can't accept anything non-ASCII */
                 return FALSE;
+            }
         
         case gestalt_CharOutput: 
             if (val >= 32 && val < 127) {
@@ -45,6 +53,12 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr,
                     even if it's wrong. */
                 if (arr && arrlen >= 1)
                     arr[0] = 1;
+                /* If we're doing UTF-8 output, we can print any Unicode
+                   character. Except control characters. */
+                if (gli_utf8output) {
+                    if (val >= 160 && val < 0x200000)
+                        return gestalt_CharOutput_ExactPrint;
+                }
                 return gestalt_CharOutput_CannotPrint;
             }
             
@@ -60,6 +74,13 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr,
             
         case gestalt_DrawImage:
             return FALSE;
+            
+        case gestalt_Unicode:
+#ifdef GLK_MODULE_UNICODE
+            return TRUE;
+#else
+            return FALSE;
+#endif /* GLK_MODULE_UNICODE */
             
         case gestalt_Sound:
         case gestalt_SoundVolume:
