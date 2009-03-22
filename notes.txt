@@ -1,0 +1,66 @@
+CheapGlk: Cheapass Implementation of the Glk API.
+
+CheapGlk Library: version 0.6.
+Glk API which this implements: version 0.4.
+Designed by Andrew Plotkin <erkyrath@netcom.com>
+http://www.edoc.com/zarf/glk/index.html
+
+This is source code for the simplest possible implementation of the Glk
+API. It uses stdio.h calls (fopen, putc, getc), but not any of the
+curses.h calls (which handle cursor movement and unbuffered keyboard
+input.) So there's no way it can support multiple windows, or a status
+bar. In fact, this library only allows you to create *one* window at a
+time, and that must be a TextBuffer. Fortunately -- well, deliberately
+-- TextBuffer windows are very simple; all the library has to be able to
+do is printf() straight to stdout.
+
+Functions which begin with glk_ are, of course, Glk API functions. These
+are declared in glk.h, which is not included in this package. Make sure
+glk.h is available before you try to compile this stuff.
+
+Functions which begin with gli_ are internal to the CheapGlk library
+implementation. They don't exist in every Glk library, because different
+libraries implement things in different ways. (In fact, they may be
+declared differently, or have different meanings, in different Glk
+libraries.) These gli_ functions (and other internal constants and
+structures) are declared in cheapglk.h.
+
+As you can see from the code, I've kept a policy of catching every error
+that I can possibly catch, and printing visible warnings.
+
+The 32-bit integer identifiers used by the game program (winid_t,
+strid_t, frefid_t) are created by casting structure pointers to glui32.
+See the beginning of cheapglk.h for the macros that handle this. If your
+system uses pointers larger than 32 bits, or if there's some wackiness
+that prevents you casting pointers to numbers and back, you'll have to
+create some other identifier system. (A hash table would work fine.)
+
+Other than that, this code should be portable to any C environment which
+has an ANSI stdio library. The likely trouble spots are
+glk_fileref_delete_file() and glk_fileref_does_file_exist() -- I've
+implemented them with the Unix calls unlink() and stat() respectively.
+
+The character-encoding problem is pretty much ignored here (like most of
+the more complicated Glk issues.) This source code assumes that players
+can only type the standard ASCII characters (32 to 126), and also that
+the display (wherever stdout goes) can only display the same. It tells
+these facts to the game via the character I/O Gestalt selectors. So
+really, if the player *can* type accented characters, you'll have to
+modify this code to transform them to Latin-1 encoding (if necessary)
+and also change the Gestalt responses. Similarly, if displaying accented
+characters is possible, you'll have to write code to transform Latin-1
+to the platform-native encoding (if necessary) and again change Gestalt.
+
+(The Gestalt step is important! A well-written game will not even try to
+print an accented character unless Gestalt reassures it that the output
+capacity is there.)
+
+* Permissions
+
+The source code in this package is copyright 1998 by Andrew Plotkin. You
+may copy and distribute it freely, by any means and under any conditions,
+as long as the code and documentation is not changed. You may also modify
+this code and incorporate it into your own programs, as long as you retain
+a notice in your program or documentation which mentions my name and the
+URL shown above.
+
