@@ -104,6 +104,25 @@ frefid_t glk_fileref_create_temp(glui32 usage, glui32 rock)
     return fref;
 }
 
+frefid_t glk_fileref_create_from_fileref(glui32 usage, frefid_t oldfref,
+    glui32 rock)
+{
+    fileref_t *fref; 
+
+    if (!oldfref) {
+        gli_strict_warning("fileref_create_from_fileref: invalid ref");
+        return NULL;
+    }
+
+    fref = gli_new_fileref(oldfref->filename, usage, rock);
+    if (!fref) {
+        gli_strict_warning("fileref_create_from_fileref: unable to create fileref.");
+        return NULL;
+    }
+    
+    return fref;
+}
+
 frefid_t glk_fileref_create_by_name(glui32 usage, char *name,
     glui32 rock)
 {

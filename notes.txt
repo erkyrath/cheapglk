@@ -1,7 +1,7 @@
 CheapGlk: Cheapass Implementation of the Glk API.
 
-CheapGlk Library: version 0.82.
-Glk API which this implements: version 0.51.
+CheapGlk Library: version 0.8.3.
+Glk API which this implements: version 0.52.
 Designed by Andrew Plotkin <erkyrath@netcom.com>
 http://www.eblong.com/zarf/glk/index.html
 
@@ -158,11 +158,15 @@ capacity is there.)
 
 * Version History
 
-0.82:
+0.8.3:
+    Upgraded to Glk API version 0.52; i.e., stubs for sound code.
+    Made the license a bit friendlier.
+
+0.8.2:
     Fixed a leak (stream objects were never unregistered).
     Added more consistency-checking to the disprock values.
 
-0.81:
+0.8.1:
     Upgraded to Glk API version 0.51; i.e., stubs for graphics code.
 
 0.8:
@@ -178,8 +182,9 @@ capacity is there.)
 
 The source code in this package is copyright 1998-9 by Andrew Plotkin. You
 may copy and distribute it freely, by any means and under any conditions,
-as long as the code and documentation is not changed. You may also modify
-this code and incorporate it into your own programs, as long as you retain
+as long as the code and documentation is not changed. You may also
+incorporate this code into your own program and distribute that, or modify
+this code and use and distribute the modified version, as long as you retain
 a notice in your program or documentation which mentions my name and the
 URL shown above.
 

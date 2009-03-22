@@ -1,16 +1,17 @@
 #ifndef GLK_H
 #define GLK_H
 
-/* glk.h: Header file for Glk API, version 0.51.
+/* glk.h: Header file for Glk API, version 0.52.
     Designed by Andrew Plotkin <erkyrath@netcom.com>
     http://www.eblong.com/zarf/glk/index.html
 
     This file is copyright 1998-1999 by Andrew Plotkin. You may copy,
     distribute, and incorporate it into your own programs, by any means
     and under any conditions, as long as you do not modify it. You may
-    also modify this file and incorporate it into your own programs, as
-    long as you retain a notice in your program or documentation which
-    mentions my name and the URL shown above.
+    also modify this file, incorporate it into your own programs, 
+    and distribute the modified version, as long as you retain a notice
+    in your program or documentation which mentions my name and the URL 
+    shown above.
 */
 
 /* You may have to edit the definition of glui32 to make sure it's really a
@@ -22,12 +23,14 @@ typedef signed long glsi32;
 /* These are the compile-time conditionals that reveal various Glk optional
     modules. */
 #define GLK_MODULE_IMAGE
+#define GLK_MODULE_SOUND
 
 /* These types are opaque object identifiers. They're pointers to opaque
     C structures, which are defined differently by each library. */
 typedef struct glk_window_struct  *winid_t;
 typedef struct glk_stream_struct  *strid_t;
 typedef struct glk_fileref_struct *frefid_t;
+typedef struct glk_schannel_struct *schanid_t;
 
 #define gestalt_Version (0)
 #define gestalt_CharInput (1)
@@ -40,6 +43,9 @@ typedef struct glk_fileref_struct *frefid_t;
 #define gestalt_Timer (5)
 #define gestalt_Graphics (6)
 #define gestalt_DrawImage (7)
+#define gestalt_Sound (8)
+#define gestalt_SoundVolume (9)
+#define gestalt_SoundNotify (10)
 
 #define evtype_None (0)
 #define evtype_Timer (1)
@@ -48,6 +54,7 @@ typedef struct glk_fileref_struct *frefid_t;
 #define evtype_MouseInput (4)
 #define evtype_Arrange (5) 
 #define evtype_Redraw (6)
+#define evtype_SoundNotify (7)
 
 typedef struct event_struct {
     glui32 type;
@@ -226,6 +233,8 @@ extern frefid_t glk_fileref_create_by_name(glui32 usage, char *name,
     glui32 rock);
 extern frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
     glui32 rock);
+extern frefid_t glk_fileref_create_from_fileref(glui32 usage, frefid_t fref,
+    glui32 rock);
 extern void glk_fileref_destroy(frefid_t fref); 
 extern frefid_t glk_fileref_iterate(frefid_t fref, glui32 *rockptr); 
 extern glui32 glk_fileref_get_rock(frefid_t fref);
@@ -268,5 +277,22 @@ extern void glk_window_fill_rect(winid_t win, glui32 color,
 extern void glk_window_set_background_color(winid_t win, glui32 color);
 
 #endif /* GLK_MODULE_IMAGE */
+
+#ifdef GLK_MODULE_SOUND
+
+extern schanid_t glk_schannel_create(glui32 rock);
+extern void glk_schannel_destroy(schanid_t chan); 
+extern schanid_t glk_schannel_iterate(schanid_t chan, glui32 *rockptr);
+extern glui32 glk_schannel_get_rock(schanid_t chan);
+
+extern glui32 glk_schannel_play(schanid_t chan, glui32 snd);
+extern glui32 glk_schannel_play_ext(schanid_t chan, glui32 snd, glui32 repeats,
+    glui32 notify);
+extern void glk_schannel_stop(schanid_t chan);
+extern void glk_schannel_set_volume(schanid_t chan, glui32 vol);
+
+extern void glk_sound_load_hint(glui32 snd, glui32 flag);
+
+#endif /* GLK_MODULE_SOUND */
 
 #endif /* GLK_H */

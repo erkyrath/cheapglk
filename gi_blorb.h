@@ -2,16 +2,17 @@
 #define _GI_BLORB_H
 
 /* gi_blorb.h: Blorb library layer for Glk API.
-    gi_blorb version 1.0.
+    gi_blorb version 1.1.
     Designed by Andrew Plotkin <erkyrath@netcom.com>
     http://www.eblong.com/zarf/glk/index.html
 
     This file is copyright 1998-1999 by Andrew Plotkin. You may copy,
     distribute, and incorporate it into your own programs, by any means
     and under any conditions, as long as you do not modify it. You may
-    also modify this file and incorporate it into your own programs, as
-    long as you retain a notice in your program or documentation which
-    mentions my name and the URL shown above.
+    also modify this file, incorporate it into your own programs, 
+    and distribute the modified version, as long as you retain a notice
+    in your program or documentation which mentions my name and the URL 
+    shown above.
 */
 
 /* Error type and error codes */
@@ -56,6 +57,7 @@ typedef struct giblorb_result_struct {
             used giblorb_method_FilePos) */
     } data;
     glui32 length; /* The length of the data */
+    glui32 chunktype; /* The type of the chunk. */
 } giblorb_result_t;
 
 extern giblorb_err_t giblorb_create_map(strid_t file, 
