@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "glk.h"
 #include "cheapglk.h"
 #include "glkstart.h"
