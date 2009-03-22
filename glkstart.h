@@ -49,6 +49,7 @@ extern glkunix_argumentlist_t glkunix_arguments[];
 
 extern int glkunix_startup_code(glkunix_startup_t *data);
 
+extern void glkunix_set_base_file(char *filename);
 extern strid_t glkunix_stream_open_pathname(char *pathname, glui32 textmode, 
     glui32 rock);
 

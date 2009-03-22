@@ -73,6 +73,8 @@ void glk_select(event_t *event)
     
     gli_event_clearevent(event);
     
+    fflush(stdout);
+
     if (!win || !(win->char_request || win->line_request)) {
         /* No input requests. This is legal, but a pity, because the
             correct behavior is to wait forever. Bye bye. */

@@ -3,13 +3,13 @@
 
 /* cheapglk.h: Private header file for Cheapass Implementation of the 
         Glk API.
-    CheapGlk Library: version 0.8.4.
+    CheapGlk Library: version 0.8.5.
     Glk API which this implements: version 0.52.
     Designed by Andrew Plotkin <erkyrath@netcom.com>
     http://www.eblong.com/zarf/glk/index.html
 */
 
-#define LIBRARY_VERSION "0.8.4"
+#define LIBRARY_VERSION "0.8.5"
 
 #include "gi_dispa.h"
 

@@ -11,8 +11,10 @@
     type.
 */
 
-/* linked list of all filerefs */
+/* Linked list of all filerefs */
 static fileref_t *gli_filereflist = NULL; 
+
+static char workingdir[256] = ".";
 
 fileref_t *gli_new_fileref(char *filename, glui32 usage, glui32 rock)
 {
@@ -128,6 +130,7 @@ frefid_t glk_fileref_create_by_name(glui32 usage, char *name,
 {
     fileref_t *fref;
     char buf[256];
+    char buf2[256];
     int len;
     char *cx;
     
@@ -162,7 +165,9 @@ frefid_t glk_fileref_create_by_name(glui32 usage, char *name,
             *cx = '-';
     }
     
-    fref = gli_new_fileref(buf, usage, rock);
+    sprintf(buf2, "%s/%s", workingdir, buf);
+
+    fref = gli_new_fileref(buf2, usage, rock);
     if (!fref) {
         gli_strict_warning("fileref_create_by_name: unable to create fileref.");
         return NULL;
@@ -175,7 +180,7 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
     glui32 rock)
 {
     fileref_t *fref;
-    char buf[256];
+    char buf[256], newbuf[256];
     char *cx;
     int val;
     char *prompt, *prompt2;
@@ -222,7 +227,12 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
         return NULL;
     }
     
-    fref = gli_new_fileref(cx, usage, rock);
+    if (cx[0] == '/')
+        strcpy(newbuf, cx);
+    else
+        sprintf(newbuf, "%s/%s", workingdir, cx);
+
+    fref = gli_new_fileref(newbuf, usage, rock);
     if (!fref) {
         gli_strict_warning("fileref_create_by_prompt: unable to create fileref.");
         return NULL;
@@ -294,3 +304,26 @@ void glk_fileref_delete_file(fileref_t *fref)
         
     unlink(fref->filename);
 }
+
+/* This should only be called from startup code. */
+void glkunix_set_base_file(char *filename)
+{
+    char *cx;
+    int ix;
+  
+    for (ix=strlen(filename)-1; ix >= 0; ix--) 
+        if (filename[ix] == '/')
+	    break;
+
+    if (ix >= 0) {
+        /* There is a slash. */
+        strncpy(workingdir, filename, ix);
+	workingdir[ix] = '\0';
+	ix++;
+    }
+    else {
+        /* No slash, just a filename. */
+        ix = 0;
+    }
+}
+
