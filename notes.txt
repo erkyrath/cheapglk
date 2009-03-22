@@ -1,6 +1,6 @@
 CheapGlk: Cheapass Implementation of the Glk API.
 
-CheapGlk Library: version 0.81.
+CheapGlk Library: version 0.82.
 Glk API which this implements: version 0.51.
 Designed by Andrew Plotkin <erkyrath@netcom.com>
 http://www.eblong.com/zarf/glk/index.html
@@ -157,6 +157,10 @@ print an accented character unless Gestalt reassures it that the output
 capacity is there.)
 
 * Version History
+
+0.82:
+    Fixed a leak (stream objects were never unregistered).
+    Added more consistency-checking to the disprock values.
 
 0.81:
     Upgraded to Glk API version 0.51; i.e., stubs for graphics code.

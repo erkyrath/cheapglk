@@ -38,6 +38,8 @@ fileref_t *gli_new_fileref(char *filename, glui32 usage, glui32 rock)
     
     if (gli_register_obj)
         fref->disprock = (*gli_register_obj)(fref, gidisp_Class_Fileref);
+    else
+        fref->disprock = NULL;
 
     return fref;
 }
@@ -46,8 +48,10 @@ void gli_delete_fileref(fileref_t *fref)
 {
     fileref_t *prev, *next;
     
-    if (gli_unregister_obj)
+    if (gli_unregister_obj) {
         (*gli_unregister_obj)(fref, gidisp_Class_Fileref, fref->disprock);
+	fref->disprock = NULL;
+    }
         
     fref->magicnum = 0;
     

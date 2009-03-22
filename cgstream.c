@@ -49,6 +49,8 @@ stream_t *gli_new_stream(int type, int readable, int writable,
     
     if (gli_register_obj)
         str->disprock = (*gli_register_obj)(str, gidisp_Class_Stream);
+    else
+        str->disprock = NULL;
     
     return str;
 }
@@ -84,6 +86,11 @@ void gli_delete_stream(stream_t *str)
             fclose(str->file);
             str->file = NULL;
             break;
+    }
+
+    if (gli_unregister_obj) {
+        (*gli_unregister_obj)(str, gidisp_Class_Stream, str->disprock);
+	str->disprock = NULL;
     }
     
     prev = str->prev;
