@@ -1,7 +1,7 @@
 #ifndef GLK_H
 #define GLK_H
 
-/* glk.h: Header file for Glk API, version 0.6.0.
+/* glk.h: Header file for Glk API, version 0.6.1.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://www.eblong.com/zarf/glk/index.html
 
@@ -49,6 +49,8 @@ typedef struct glk_schannel_struct *schanid_t;
 #define gestalt_SoundNotify (10)
 #define gestalt_Hyperlinks (11)
 #define gestalt_HyperlinkInput (12)
+#define gestalt_SoundMusic (13)
+#define gestalt_GraphicsTransparency (14)
 
 #define evtype_None (0)
 #define evtype_Timer (1)
@@ -156,7 +158,8 @@ typedef struct stream_result_struct {
 #define stylehint_Proportional (6)
 #define stylehint_TextColor (7)
 #define stylehint_BackColor (8)
-#define stylehint_NUMHINTS (9)
+#define stylehint_ReverseColor (9)
+#define stylehint_NUMHINTS (10)
 
 #define   stylehint_just_LeftFlush (0)
 #define   stylehint_just_LeftRight (1)

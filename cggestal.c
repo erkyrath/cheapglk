@@ -17,7 +17,7 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr,
     switch (id) {
         
         case gestalt_Version:
-            return 0x00000600;
+            return 0x00000601;
         
         case gestalt_LineInput:
             if (val >= 32 && val < 127)
@@ -55,6 +55,7 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr,
             return FALSE;
 
         case gestalt_Graphics:
+        case gestalt_GraphicsTransparency:
             return FALSE;
             
         case gestalt_DrawImage:
@@ -63,7 +64,8 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr,
         case gestalt_Sound:
         case gestalt_SoundVolume:
         case gestalt_SoundNotify: 
-	    return FALSE;
+        case gestalt_SoundMusic:
+            return FALSE;
 
         default:
             return 0;

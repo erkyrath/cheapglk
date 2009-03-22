@@ -52,7 +52,7 @@ void gli_delete_fileref(fileref_t *fref)
     
     if (gli_unregister_obj) {
         (*gli_unregister_obj)(fref, gidisp_Class_Fileref, fref->disprock);
-	fref->disprock.ptr = NULL;
+        fref->disprock.ptr = NULL;
     }
         
     fref->magicnum = 0;
@@ -313,13 +313,13 @@ void glkunix_set_base_file(char *filename)
   
     for (ix=strlen(filename)-1; ix >= 0; ix--) 
         if (filename[ix] == '/')
-	    break;
+            break;
 
     if (ix >= 0) {
         /* There is a slash. */
         strncpy(workingdir, filename, ix);
-	workingdir[ix] = '\0';
-	ix++;
+        workingdir[ix] = '\0';
+        ix++;
     }
     else {
         /* No slash, just a filename. */

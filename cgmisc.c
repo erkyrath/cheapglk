@@ -125,7 +125,7 @@ void glk_select(event_t *event)
         }
 
         win->line_request = FALSE;
-	win->linebuf = NULL;
+        win->linebuf = NULL;
         event->type = evtype_LineInput;
         event->win = win;
         event->val1 = val;

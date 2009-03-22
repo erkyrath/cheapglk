@@ -1,4 +1,4 @@
-/* gi_dispa.c: Dispatch layer for Glk API, version 0.6.0.
+/* gi_dispa.c: Dispatch layer for Glk API, version 0.6.1.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://www.eblong.com/zarf/glk/index.html
 
@@ -56,11 +56,13 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "gestalt_CharOutput_ExactPrint", (2) },
     { "gestalt_DrawImage", (7) },
     { "gestalt_Graphics", (6) },
+    { "gestalt_GraphicsTransparency", (14) },
     { "gestalt_HyperlinkInput", (12) },
     { "gestalt_Hyperlinks", (11) },
     { "gestalt_LineInput", (2) },
     { "gestalt_MouseInput", (4) },
     { "gestalt_Sound", (8) },
+    { "gestalt_SoundMusic", (13) },
     { "gestalt_SoundNotify", (10) },
     { "gestalt_SoundVolume", (9) },
     { "gestalt_Timer", (5) },
@@ -116,10 +118,11 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "stylehint_BackColor", (8) },
     { "stylehint_Indentation", (0) },
     { "stylehint_Justification", (2)  },
-    { "stylehint_NUMHINTS", (9) },
+    { "stylehint_NUMHINTS", (10) },
     { "stylehint_Oblique", (5) },
     { "stylehint_ParaIndentation", (1) },
     { "stylehint_Proportional", (6) },
+    { "stylehint_ReverseColor", (9) },
     { "stylehint_Size", (3) },
     { "stylehint_TextColor", (7) },
     { "stylehint_Weight", (4) },
@@ -395,7 +398,7 @@ char *gidispatch_prototype(glui32 funcnum)
         case 0x0087: /* set_style_stream */
             return "2QbIu:";
         case 0x0090: /* get_char_stream */
-            return "2Iu:Iu";
+            return "2Qb:Iu";
         case 0x0091: /* get_line_stream */
             return "3Qb<+#Cn:Iu"; 
         case 0x0092: /* get_buffer_stream */

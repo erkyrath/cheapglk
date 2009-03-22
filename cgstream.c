@@ -90,7 +90,7 @@ void gli_delete_stream(stream_t *str)
 
     if (gli_unregister_obj) {
         (*gli_unregister_obj)(str, gidisp_Class_Stream, str->disprock);
-	str->disprock.ptr = NULL;
+        str->disprock.ptr = NULL;
     }
     
     prev = str->prev;
