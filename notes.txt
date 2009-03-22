@@ -1,7 +1,7 @@
 CheapGlk: Cheapass Implementation of the Glk API.
 
-CheapGlk Library: version 0.8.3.
-Glk API which this implements: version 0.52.
+CheapGlk Library: version 0.8.4.
+Glk API which this implements: version 0.5.2.
 Designed by Andrew Plotkin <erkyrath@netcom.com>
 http://www.eblong.com/zarf/glk/index.html
 
@@ -158,8 +158,13 @@ capacity is there.)
 
 * Version History
 
+0.8.4:
+    Added the ability to open a Blorb file, although the library never
+    makes use of it. (This allows an interpreter to read a game file
+    from Blorb.)
+
 0.8.3:
-    Upgraded to Glk API version 0.52; i.e., stubs for sound code.
+    Upgraded to Glk API version 0.5.2; i.e., stubs for sound code.
     Made the license a bit friendlier.
 
 0.8.2:
@@ -167,7 +172,7 @@ capacity is there.)
     Added more consistency-checking to the disprock values.
 
 0.8.1:
-    Upgraded to Glk API version 0.51; i.e., stubs for graphics code.
+    Upgraded to Glk API version 0.5.1; i.e., stubs for graphics code.
 
 0.8:
     Upgraded to Glk API version 0.5; added dispatch layer code.

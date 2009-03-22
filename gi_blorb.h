@@ -2,7 +2,7 @@
 #define _GI_BLORB_H
 
 /* gi_blorb.h: Blorb library layer for Glk API.
-    gi_blorb version 1.1.
+    gi_blorb version 1.3.
     Designed by Andrew Plotkin <erkyrath@netcom.com>
     http://www.eblong.com/zarf/glk/index.html
 
@@ -83,5 +83,6 @@ extern giblorb_err_t giblorb_count_resources(giblorb_map_t *map,
     are necessarily implemented in platform-dependent code. 
 */
 extern giblorb_err_t giblorb_set_resource_map(strid_t file);
+extern giblorb_map_t *giblorb_get_resource_map(void);
 
 #endif /* _GI_BLORB_H */

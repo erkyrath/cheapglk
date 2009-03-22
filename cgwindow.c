@@ -34,7 +34,7 @@ window_t *gli_new_window(glui32 rock)
     if (gli_register_obj)
         win->disprock = (*gli_register_obj)(win, gidisp_Class_Window);
     else
-        win->disprock = NULL;
+        win->disprock.ptr = NULL;
     
     return win;
 }
@@ -51,7 +51,7 @@ void gli_delete_window(window_t *win)
 
     if (gli_unregister_obj) {
         (*gli_unregister_obj)(win, gidisp_Class_Window, win->disprock);
-	win->disprock = NULL;
+	win->disprock.ptr = NULL;
     }
         
     win->magicnum = 0;

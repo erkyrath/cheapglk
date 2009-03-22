@@ -1,5 +1,5 @@
 /* gi_blorb.c: Blorb library layer for Glk API.
-    gi_blorb version 1.1.
+    gi_blorb version 1.3.
     Designed by Andrew Plotkin <erkyrath@netcom.com>
     http://www.eblong.com/zarf/glk/index.html
 
@@ -535,21 +535,19 @@ static void giblorb_qsort(giblorb_resdesc_t **list, int len)
         /* Split the list. */
         pivot = list[len/2];
         ix=0;
-        jx=len-1;
+        jx=len;
         while (1) {
-            while (ix < jx && sortsplot(list[ix], pivot) < 0)
+            while (ix < jx-1 && sortsplot(list[ix], pivot) < 0)
                 ix++;
-            while (ix < jx && sortsplot(list[jx], pivot) > 0)
+            while (ix < jx-1 && sortsplot(list[jx-1], pivot) > 0)
                 jx--;
-            if (ix >= jx)
+            if (ix >= jx-1)
                 break;
             tmpptr = list[ix];
-            list[ix] = list[jx];
-            list[jx] = tmpptr;
-            ix++;
-            if (ix < jx)
-                jx--;
+            list[ix] = list[jx-1];
+            list[jx-1] = tmpptr;
         }
+	ix++;
         /* Sort the halves. */
         giblorb_qsort(list+0, ix);
         giblorb_qsort(list+ix, len-ix);
