@@ -164,12 +164,12 @@ strid_t glk_stream_open_memory(char *buf, glui32 buflen, glui32 fmode,
     }
     
     if (buf && buflen) {
-        str->buf = buf;
-        str->bufptr = buf;
+        str->buf = (unsigned char *)buf;
+        str->bufptr = (unsigned char *)buf;
         str->buflen = buflen;
         str->bufend = str->buf + str->buflen;
         if (fmode == filemode_Write)
-            str->bufeof = buf;
+            str->bufeof = str->buf;
         else
             str->bufeof = str->bufend;
         if (gli_register_arr) {
@@ -985,10 +985,14 @@ static glui32 gli_get_line(stream_t *str, char *cbuf, glui32 *ubuf,
                 if (cbuf) {
                     char *res;
                     res = fgets(cbuf, len, str->file);
-                    if (!res)
+                    if (!res) {
                         return 0;
-                    else
-                        return strlen(cbuf);
+                    }
+                    else {
+                        glui32 lx = strlen(cbuf);
+                        str->readcount += lx;
+                        return lx;
+                    }
                 }
                 else {
                     glui32 lx;

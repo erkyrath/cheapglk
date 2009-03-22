@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
                     else {
                         ix++;
                         if (ix<argc) 
-                            val = atoi(argv[ix+1]);
+                            val = atoi(argv[ix]);
                     }
                     if (val < 8)
                         errflag = 1;
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
                     else {
                         ix++;
                         if (ix<argc) 
-                            val = atoi(argv[ix+1]);
+                            val = atoi(argv[ix]);
                     }
                     if (val < 2)
                         errflag = 1;

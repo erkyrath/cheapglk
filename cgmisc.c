@@ -103,7 +103,7 @@ void glk_select(event_t *event)
             val = strlen(buf);
             if (val && (buf[val-1] == '\n' || buf[val-1] == '\r'))
                 val--;
-            len = gli_parse_utf8(buf, val, &kval, 1);
+            len = gli_parse_utf8((unsigned char *)buf, val, &kval, 1);
             if (!len)
                 kval = '\n';
         }
@@ -147,7 +147,7 @@ void glk_select(event_t *event)
         }
         else {
             glui32 ubuf[256];
-            val = gli_parse_utf8(buf, val, ubuf, 256);
+            val = gli_parse_utf8((unsigned char *)buf, val, ubuf, 256);
             if (val > win->linebuflen)
                 val = win->linebuflen;
             if (!win->line_request_uni) {

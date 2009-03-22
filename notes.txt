@@ -1,6 +1,6 @@
 CheapGlk: Cheapass Implementation of the Glk API.
 
-CheapGlk Library: version 0.9.0.
+CheapGlk Library: version 0.9.0. ####
 Glk API which this implements: version 0.7.0.
 Designed by Andrew Plotkin <erkyrath@eblong.com>
 http://www.eblong.com/zarf/glk/index.html
@@ -178,6 +178,11 @@ or Unicode input will fail.) In "-u" mode, CheapGlk declares that it
 can input and output all Unicode characters.
 
 * Version History
+
+###:
+    Fixed readcount bug in gli_get_line().
+    Fixed argument parsing bug ("-w 120" was handled wrong).
+    ### fix buffer overflow in fileref_byname? ###
 
 0.9.0:
     Upgraded to Glk API version 0.7.0; added the Unicode functions.
