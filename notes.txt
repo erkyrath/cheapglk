@@ -180,6 +180,7 @@ can input and output all Unicode characters.
 * Version History
 
 ###:
+    Fixed file-creation bug in glk_stream_open_file().
     Fixed readcount bug in gli_get_line().
     Fixed argument parsing bug ("-w 120" was handled wrong).
     ### fix buffer overflow in fileref_byname? ###

@@ -191,6 +191,27 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
         gli_strict_warning("stream_open_file: invalid fileref id.");
         return NULL;
     }
+
+    /* The spec says that Write, ReadWrite, and WriteAppend create the
+       file if necessary. However, fopen(filename, "r+") doesn't create
+       a file. So we have to pre-create it in the ReadWrite and
+       WriteAppend cases. (We use a "b" because we're going to close
+       it immediately, so it doesn't matter.) */
+
+    if (fmode == filemode_ReadWrite || fmode == filemode_WriteAppend) {
+        if (fmode == filemode_ReadWrite) 
+            strcpy(modestr, "wb"); /* truncate */
+        else
+            strcpy(modestr, "ab"); /* don't truncate */
+
+        fl = fopen(fref->filename, modestr);
+        if (!fl) {
+            gli_strict_warning("stream_open_file: unable to open file.");
+            return NULL;
+        }
+
+        fclose(fl);
+    }
     
     switch (fmode) {
         case filemode_Write:
@@ -203,7 +224,9 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
             strcpy(modestr, "r+");
             break;
         case filemode_WriteAppend:
-            strcpy(modestr, "a");
+            /* Can't use "a" here, because then fseek wouldn't work.
+               Instead we use "r+" and then fseek to the end. */
+            strcpy(modestr, "r+");
             break;
     }
     
@@ -214,6 +237,10 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
     if (!fl) {
         gli_strict_warning("stream_open_file: unable to open file.");
         return NULL;
+    }
+    
+    if (fmode == filemode_WriteAppend) {
+        fseek(fl, 0, 2); /* ...to the end. */
     }
 
     str = gli_new_stream(strtype_File, 
