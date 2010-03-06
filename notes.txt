@@ -183,7 +183,7 @@ can input and output all Unicode characters.
     Fixed file-creation bug in glk_stream_open_file().
     Fixed readcount bug in gli_get_line().
     Fixed argument parsing bug ("-w 120" was handled wrong).
-    ### fix buffer overflow in fileref_byname? ###
+    Fixed potential buffer overflow in glk_fileref_create_by_name().
 
 0.9.0:
     Upgraded to Glk API version 0.7.0; added the Unicode functions.
