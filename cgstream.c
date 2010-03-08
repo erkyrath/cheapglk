@@ -195,16 +195,11 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
     /* The spec says that Write, ReadWrite, and WriteAppend create the
        file if necessary. However, fopen(filename, "r+") doesn't create
        a file. So we have to pre-create it in the ReadWrite and
-       WriteAppend cases. (We use a "b" because we're going to close
-       it immediately, so it doesn't matter.) */
+       WriteAppend cases. (We use "a" so as not to truncate, and "b" 
+       because we're going to close it immediately, so it doesn't matter.) */
 
     if (fmode == filemode_ReadWrite || fmode == filemode_WriteAppend) {
-        if (fmode == filemode_ReadWrite) 
-            strcpy(modestr, "wb"); /* truncate */
-        else
-            strcpy(modestr, "ab"); /* don't truncate */
-
-        fl = fopen(fref->filename, modestr);
+        fl = fopen(fref->filename, "ab");
         if (!fl) {
             gli_strict_warning("stream_open_file: unable to open file.");
             return NULL;
