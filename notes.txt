@@ -1,9 +1,9 @@
 CheapGlk: Cheapass Implementation of the Glk API.
 
-CheapGlk Library: version 0.9.0. ####
+CheapGlk Library: version 0.9.1.
 Glk API which this implements: version 0.7.0.
 Designed by Andrew Plotkin <erkyrath@eblong.com>
-http://www.eblong.com/zarf/glk/index.html
+http://eblong.com/zarf/glk/index.html
 
 This is source code for the simplest possible implementation of the Glk
 API. It uses stdio.h calls (fopen, putc, getc), but not any of the
@@ -179,7 +179,7 @@ can input and output all Unicode characters.
 
 * Version History
 
-###:
+0.9.1:
     Fixed file-creation bug in glk_stream_open_file().
     Fixed readcount bug in gli_get_line().
     Fixed argument parsing bug ("-w 120" was handled wrong).
