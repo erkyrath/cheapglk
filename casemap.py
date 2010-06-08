@@ -117,6 +117,35 @@ sys.stderr.write(str(titleablechars) + ' characters with a distinct title-case\n
 sys.stderr.write(str(totalspecialcases) + ' characters with length changes\n')
 sys.stderr.write(str(len(specialtable)) + ' special-case characters\n')
 
+# This semi-clever function takes a (sorted) list of integers, and
+# divides it into a list of arithmetic runs, and a list of leftovers:
+#
+#     ([ (start, end, jump), (start, end, jump), ...], [ ... ])
+#
+# It's only semi-clever, because it really can only recognize a single
+# run. So if you pass in [3,4,5,6,7], you'll get back ([(3, 7, 1)], []).
+# But if you pass in [3,4,6,7,8], you'll get back ([], [3,4,6,7,8]) --
+# it will ignore the possible runs and just return everything as leftovers.
+#
+def find_runs(ls):
+    if (len(ls) < 2):
+        return ([], ls)
+    start = ls[0]
+    end = ls[-1]
+    jump = ls[1] - ls[0]
+    
+    ok = True
+    checkval = start
+    for val in ls:
+        if (val != checkval):
+            ok = False
+            break
+        checkval += jump
+
+    if (ok):
+        return ([(start, end, jump)], [])
+    return ([], ls)
+
 if (not is_js):
     # C code output
     
@@ -235,35 +264,91 @@ else:
     
     keys = casetable.keys()
     keys.sort()
-    
-    tablelist = [ (0, 'upper'), (1, 'lower'), (2, 'title') ]
+
+    tablelist = [ (0, 'upper'),
+                  (1, 'lower'),
+                  (2, 'title') ]
     for (index, label) in tablelist:
+        pairs = []
+        offsets = {}
+        for key in keys:
+            if (specialtable.has_key(key)):
+                ls = specialtable[key][index]
+                if (len(ls) != 1):
+                    pairs.append( (key, ls) )
+                    continue
+                val = ls[0]
+            elif (casetable.has_key(key)):
+                val = casetable[key][index]
+            else:
+                continue
+            if (val == key):
+                continue
+            offset = key-val
+            offsets[offset] = offsets.get(offset, 0) + 1
+            pairs.append( (key, val) )
+
+        special_offsets = dict([ (key, offsets[key]) for key in offsets.keys()
+                                 if offsets[key] >= 16 ])
+        offmaps = {}
+        for offset in special_offsets.keys():
+            offmaps[offset] = []
+            
+        print '/* list all the special cases in unicode_%s_table */' % (label,)
         print 'var unicode_%s_table = {' % (label,)
         rowcount = 0
-        for key in keys:
+        for (key, val) in pairs:
             if (rowcount >= 5):
                 print
                 rowcount = 0
-            if (specialtable.has_key(key)):
-                ls = specialtable[key][index]
-                if (len(ls) == 1):
-                    val = ls[0]
-                    if (val == key):
-                        continue
-                    print ' %s: %s,' % (hex(key), hex(val)),
-                    rowcount += 1
-                    continue
-                ls = [ hex(val) for val in ls ]
-                print ' %s: [ %s ],' % (hex(key), ','.join(ls)),
+            if (type(val) == list):
+                ls = val
+                ls = [ str(val) for val in ls ]
+                print ' %s: [ %s ],' % (str(key), ','.join(ls)),
                 rowcount += 1
                 continue
-            if (casetable.has_key(key)):
-                val = casetable[key][index]
-                if (val == key):
-                    continue
-                print ' %s: %s,' % (hex(key), hex(val)),
-                rowcount += 1
+            offset = key-val
+            if (offmaps.has_key(offset)):
+                offmaps[offset].append(key)
                 continue
+            print ' %s: %s,' % (str(key), str(val)),
+            rowcount += 1
         print
         print '};'
+
+        print '/* add all the regular cases to unicode_%s_table */' % (label,)
+        print '(function() {'
+        print '  var ls, ix, val;'
+        ls = offmaps.keys()
+        ls.sort()
+        for offset in ls:
+            if (offset < 0):
+                op = '+' + str(-offset)
+            else:
+                op = '-' + str(offset)
+            # Divide the list of values into a list of runs (which we can
+            # do with a simple for loop) and a list of leftovers (which
+            # we have to do one by one).
+            (runs, extras) = find_runs(offmaps[offset])
+            for (start, end, jump) in runs:
+                print '  for (val=%s; val<=%s; val+=%s) {' % (str(start), str(end), str(jump))
+                print '    unicode_%s_table[val] = val%s;' % (label, op)
+                print '  }'
+            if (extras):
+                print '  ls = ['
+                rowcount = 0
+                for val in extras:
+                    if (rowcount >= 8):
+                        print
+                        rowcount = 0
+                    print ' %s,' % (str(val)),
+                    rowcount += 1
+                print
+                print '  ];'
+                print '  for (ix=0; ix<ls.length; ix++) {'
+                print '    val = ls[ix];'
+                print '    unicode_%s_table[val] = val%s;' % (label, op)
+                print '  }'
+        print '})();'
         
+    print '/* End of tables generated by casemap.py. */'
