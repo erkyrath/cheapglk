@@ -122,29 +122,44 @@ sys.stderr.write(str(len(specialtable)) + ' special-case characters\n')
 #
 #     ([ (start, end, jump), (start, end, jump), ...], [ ... ])
 #
-# It's only semi-clever, because it really can only recognize a single
-# run. So if you pass in [3,4,5,6,7], you'll get back ([(3, 7, 1)], []).
-# But if you pass in [3,4,6,7,8], you'll get back ([], [3,4,6,7,8]) --
-# it will ignore the possible runs and just return everything as leftovers.
+# In the worst case, you get back ([], ls) -- no runs, and the entire
+# original list as leftovers. The minlength argument tunes the results;
+# you get no runs shorter than minlength.
 #
-def find_runs(ls):
-    if (len(ls) < 2):
-        return ([], ls)
-    start = ls[0]
-    end = ls[-1]
-    jump = ls[1] - ls[0]
+def find_runs(ls, minlength=3):
+    runs = []
+    extras = []
+    minlength = max(minlength, 2)
     
-    ok = True
-    checkval = start
-    for val in ls:
-        if (val != checkval):
-            ok = False
-            break
-        checkval += jump
+    lslen = len(ls)
+    pos = 0
 
-    if (ok):
-        return ([(start, end, jump)], [])
-    return ([], ls)
+    while True:
+        if (lslen - pos < minlength):
+            break
+        start = ls[pos]
+        jump = ls[pos+1] - start
+        if (jump == 0):
+            raise Exception("Repeated value")
+
+        newpos = pos
+        val = start
+        while True:
+            if (newpos == lslen or ls[newpos] != val):
+                break
+            newpos += 1
+            val += jump
+
+        if (newpos - pos >= minlength):
+            runs.append( (start, val-jump, jump) )
+            pos = newpos
+            continue
+        extras.append(start)
+        pos += 1
+
+    extras.extend(ls[pos:])
+
+    return (runs, extras)
 
 if (not is_js):
     # C code output
@@ -329,12 +344,18 @@ else:
             # Divide the list of values into a list of runs (which we can
             # do with a simple for loop) and a list of leftovers (which
             # we have to do one by one).
-            (runs, extras) = find_runs(offmaps[offset])
+            # The minlength value of 16 is about optimal (by experiment)
+            (runs, extras) = find_runs(offmaps[offset], 16)
             for (start, end, jump) in runs:
                 print '  for (val=%s; val<=%s; val+=%s) {' % (str(start), str(end), str(jump))
                 print '    unicode_%s_table[val] = val%s;' % (label, op)
                 print '  }'
-            if (extras):
+            if (extras and len(extras) < 3):
+                # It's more efficient to dump a few extras as single lines.
+                for val in extras:
+                    print '  unicode_%s_table[%d] = %d;' % (label, val, val-offset)
+            elif (extras):
+                # But if we have a lot of extras, we should loop over an array.
                 print '  ls = ['
                 rowcount = 0
                 for val in extras:
