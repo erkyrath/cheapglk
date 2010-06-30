@@ -311,22 +311,26 @@ else:
             
         print '/* list all the special cases in unicode_%s_table */' % (label,)
         print 'var unicode_%s_table = {' % (label,)
-        rowcount = 0
+        outls = []
         for (key, val) in pairs:
-            if (rowcount >= 5):
-                print
-                rowcount = 0
             if (type(val) == list):
                 ls = val
                 ls = [ str(val) for val in ls ]
-                print ' %s: [ %s ],' % (str(key), ','.join(ls)),
-                rowcount += 1
+                outls.append('%s: [ %s ]' % (str(key), ','.join(ls)))
                 continue
             offset = key-val
             if (offmaps.has_key(offset)):
                 offmaps[offset].append(key)
                 continue
-            print ' %s: %s,' % (str(key), str(val)),
+            outls.append('%s: %s' % (str(key), str(val)))
+        rowcount = 0
+        for ix in range(len(outls)):
+            val = outls[ix]
+            islast = (ix == len(outls)-1)
+            if (rowcount >= 5):
+                print
+                rowcount = 0
+            print ' '+val+('' if islast else ','),
             rowcount += 1
         print
         print '};'
