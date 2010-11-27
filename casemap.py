@@ -332,7 +332,7 @@ def generate_js_table(label, pairs, offsets):
         if (rowcount >= 5):
             print
             rowcount = 0
-        print ' '+val+('' if islast else ','),
+        print val+('' if islast else ','),
         rowcount += 1
     print
     print '};'
@@ -372,11 +372,11 @@ def generate_js_table(label, pairs, offsets):
                 if (rowcount >= 8):
                     print
                     rowcount = 0
-                print ' %s,' % (str(val)),
+                print '%s,' % (str(val)),
                 rowcount += 1
             print
             print '  ];'
-            print '  for (ix=0; ix<ls.length; ix++) {' ### constant
+            print '  for (ix=0; ix<%d; ix++) {' % (len(extras),)
             print '    val = ls[ix];'
             print '    unicode_%s_table[val] = val%s;' % (label, op)
             print '  }'
