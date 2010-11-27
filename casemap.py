@@ -16,7 +16,6 @@
 import sys
 import os
 import re
-import string
 
 output = 'c'
 args = sys.argv[ 1 : ]
@@ -49,6 +48,8 @@ except IOError:
 
 # parse UnicodeData.txt
 
+decomptable = {}
+
 casetable = {}
 totalchars = 0
 titleablechars = 0
@@ -71,6 +72,14 @@ while 1:
 
     val = int(ls[0], 16)
     totalchars = totalchars+1
+
+    if (len(ls) > 5 and ls[5]):
+        decomp = ls[5]
+        if not decomp.startswith('<'):
+            ent = [ int(el, 16) for el in decomp.split(' ') ]
+            if len(ent) == 1:
+                ent = ent[0]
+            decomptable[val] = ent
 
     upcase = val
     downcase = val
@@ -130,6 +139,7 @@ while 1:
     specialtable[val] = speccase
 
 sys.stderr.write(str(totalchars) + ' characters in the Unicode database\n')
+sys.stderr.write(str(len(decomptable)) + ' characters with decompositions\n')
 sys.stderr.write(str(len(casetable)) + ' characters which can change case\n')
 sys.stderr.write(str(titleablechars) + ' characters with a distinct title-case\n')
 sys.stderr.write(str(totalspecialcases) + ' characters with length changes\n')
@@ -144,7 +154,7 @@ sys.stderr.write(str(len(specialtable)) + ' special-case characters\n')
 # original list as leftovers. The minlength argument tunes the results;
 # you get no runs shorter than minlength.
 #
-def find_runs(ls, minlength=3):
+def find_runs(ls, minlength=3, jumpone=False):
     runs = []
     extras = []
     minlength = max(minlength, 2)
@@ -168,7 +178,7 @@ def find_runs(ls, minlength=3):
             newpos += 1
             val += jump
 
-        if (newpos - pos >= minlength):
+        if (newpos - pos >= minlength and not (jump != 1 and jumpone)):
             runs.append( (start, val-jump, jump) )
             pos = newpos
             continue
@@ -178,6 +188,8 @@ def find_runs(ls, minlength=3):
     extras.extend(ls[pos:])
 
     return (runs, extras)
+
+# Produce the output, in whichever form was requested.
 
 if (output == 'c'):
     # C code output
@@ -291,6 +303,144 @@ if (output == 'c'):
     
     print
 
+
+def generate_js_table(label, pairs, offsets):
+    special_offsets = dict([ (key, offsets[key]) for key in offsets.keys()
+                             if offsets[key] >= 16 ])
+    offmaps = {}
+    for offset in special_offsets.keys():
+        offmaps[offset] = []
+        
+    print '/* list all the special cases in unicode_%s_table */' % (label,)
+    print 'var unicode_%s_table = {' % (label,)
+    outls = []
+    for (key, val) in pairs:
+        if (type(val) == list):
+            ls = val
+            ls = [ str(val) for val in ls ]
+            outls.append('%s: [ %s ]' % (str(key), ','.join(ls)))
+            continue
+        offset = key-val
+        if (offmaps.has_key(offset)):
+            offmaps[offset].append(key)
+            continue
+        outls.append('%s: %s' % (str(key), str(val)))
+    rowcount = 0
+    for ix in range(len(outls)):
+        val = outls[ix]
+        islast = (ix == len(outls)-1)
+        if (rowcount >= 5):
+            print
+            rowcount = 0
+        print ' '+val+('' if islast else ','),
+        rowcount += 1
+    print
+    print '};'
+
+    if (not offmaps):
+        print
+        return
+
+    print '/* add all the regular cases to unicode_%s_table */' % (label,)
+    print '(function() {'
+    print '  var ls, ix, val;'
+    ls = offmaps.keys()
+    ls.sort()
+    for offset in ls:
+        if (offset < 0):
+            op = '+' + str(-offset)
+        else:
+            op = '-' + str(offset)
+        # Divide the list of values into a list of runs (which we can
+        # do with a simple for loop) and a list of leftovers (which
+        # we have to do one by one).
+        # The minlength value of 16 is about optimal (by experiment)
+        (runs, extras) = find_runs(offmaps[offset], 16)
+        for (start, end, jump) in runs:
+            print '  for (val=%s; val<=%s; val+=%s) {' % (str(start), str(end), str(jump))
+            print '    unicode_%s_table[val] = val%s;' % (label, op)
+            print '  }'
+        if (extras and len(extras) < 3):
+            # It's more efficient to dump a few extras as single lines.
+            for val in extras:
+                print '  unicode_%s_table[%d] = %d;' % (label, val, val-offset)
+        elif (extras):
+            # But if we have a lot of extras, we should loop over an array.
+            print '  ls = ['
+            rowcount = 0
+            for val in extras:
+                if (rowcount >= 8):
+                    print
+                    rowcount = 0
+                print ' %s,' % (str(val)),
+                rowcount += 1
+            print
+            print '  ];'
+            print '  for (ix=0; ix<ls.length; ix++) {' ### constant
+            print '    val = ls[ix];'
+            print '    unicode_%s_table[val] = val%s;' % (label, op)
+            print '  }'
+    print '})();'
+
+    print
+
+def generate_js_table_alt(label, table):
+    keys = table.keys()
+    keys.sort()
+    (runs, extras) = find_runs(keys, 16)
+    
+    print '/* list all the special cases in unicode_%s_table */' % (label,)
+    print 'var unicode_%s_table = {' % (label,)
+    outls = []
+    for key in extras:
+        val = table[key]
+        if (type(val) == list):
+            ls = val
+            ls = [ str(val) for val in ls ]
+            outls.append('%s: [ %s ]' % (str(key), ','.join(ls)))
+            continue
+        outls.append('%s: %s' % (str(key), str(val)))
+    rowcount = 0
+    for ix in range(len(outls)):
+        val = outls[ix]
+        islast = (ix == len(outls)-1)
+        if (rowcount >= 5):
+            print
+            rowcount = 0
+        print val+('' if islast else ','),
+        rowcount += 1
+    print
+    print '};'
+
+    print '/* add all the regular cases to unicode_%s_table */' % (label,)
+    print '(function() {'
+    print '  var ls, ix, val;'
+    for (start, end, jump) in runs:
+        print '  ls = ['
+        rowcount = 0
+        for ix in range(start, end+1):
+            val = table[ix]
+            if (rowcount >= 8):
+                print
+                rowcount = 0
+            if (type(val) == list):
+                val = [ str(ent) for ent in val ]
+                ent = '[' + ','.join(val) + ']'
+            else:
+                ent = str(val)
+            print '%s,' % (ent),
+            rowcount += 1
+        print
+        print '  ];'
+        print '  for (ix=0; ix<%d; ix++) {' % (end-start+1,)
+        print '    val = ls[ix];'
+        print '    unicode_%s_table[ix+%d] = val;' % (label, start)
+        print '  }'
+        
+    print '})();'
+
+    print
+    
 if (output == 'js'):
     # javascript code output
     print '/* These tables were generated by casemap.py. */'
@@ -323,77 +473,28 @@ if (output == 'js'):
             offsets[offset] = offsets.get(offset, 0) + 1
             pairs.append( (key, val) )
 
-        special_offsets = dict([ (key, offsets[key]) for key in offsets.keys()
-                                 if offsets[key] >= 16 ])
-        offmaps = {}
-        for offset in special_offsets.keys():
-            offmaps[offset] = []
-            
-        print '/* list all the special cases in unicode_%s_table */' % (label,)
-        print 'var unicode_%s_table = {' % (label,)
-        outls = []
-        for (key, val) in pairs:
-            if (type(val) == list):
-                ls = val
-                ls = [ str(val) for val in ls ]
-                outls.append('%s: [ %s ]' % (str(key), ','.join(ls)))
-                continue
-            offset = key-val
-            if (offmaps.has_key(offset)):
-                offmaps[offset].append(key)
-                continue
-            outls.append('%s: %s' % (str(key), str(val)))
-        rowcount = 0
-        for ix in range(len(outls)):
-            val = outls[ix]
-            islast = (ix == len(outls)-1)
-            if (rowcount >= 5):
-                print
-                rowcount = 0
-            print ' '+val+('' if islast else ','),
-            rowcount += 1
-        print
-        print '};'
+        generate_js_table(label, pairs, offsets)
 
-        print '/* add all the regular cases to unicode_%s_table */' % (label,)
-        print '(function() {'
-        print '  var ls, ix, val;'
-        ls = offmaps.keys()
-        ls.sort()
-        for offset in ls:
-            if (offset < 0):
-                op = '+' + str(-offset)
-            else:
-                op = '-' + str(offset)
-            # Divide the list of values into a list of runs (which we can
-            # do with a simple for loop) and a list of leftovers (which
-            # we have to do one by one).
-            # The minlength value of 16 is about optimal (by experiment)
-            (runs, extras) = find_runs(offmaps[offset], 16)
-            for (start, end, jump) in runs:
-                print '  for (val=%s; val<=%s; val+=%s) {' % (str(start), str(end), str(jump))
-                print '    unicode_%s_table[val] = val%s;' % (label, op)
-                print '  }'
-            if (extras and len(extras) < 3):
-                # It's more efficient to dump a few extras as single lines.
-                for val in extras:
-                    print '  unicode_%s_table[%d] = %d;' % (label, val, val-offset)
-            elif (extras):
-                # But if we have a lot of extras, we should loop over an array.
-                print '  ls = ['
-                rowcount = 0
-                for val in extras:
-                    if (rowcount >= 8):
-                        print
-                        rowcount = 0
-                    print ' %s,' % (str(val)),
-                    rowcount += 1
-                print
-                print '  ];'
-                print '  for (ix=0; ix<ls.length; ix++) {'
-                print '    val = ls[ix];'
-                print '    unicode_%s_table[val] = val%s;' % (label, op)
-                print '  }'
-        print '})();'
+    if True:
+        keys = decomptable.keys()
+        keys.sort()
+        ###sys.stderr.write('### ' + str(find_runs(keys, 16, True)) + '\n')
         
+        ###pairs = []
+        ###offsets = {}
+
+        #for key in keys:
+        #    ls = decomptable[key]
+        #    if (len(ls) != 1):
+        #        pairs.append( (key, ls) )
+        #        continue
+        #    val = ls[0]
+        #    if (val == key):
+        #        continue
+        #    ###offset = key-val
+        #    ###offsets[offset] = offsets.get(offset, 0) + 1
+        #    pairs.append( (key, val) )
+            
+        generate_js_table_alt('decomp', decomptable)
+
     print '/* End of tables generated by casemap.py. */'
