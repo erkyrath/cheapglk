@@ -15,7 +15,7 @@
 CC = cc
 #CC = gcc -ansi
 
-OPTIONS = -O
+OPTIONS = -g -Wall
 
 CFLAGS = $(OPTIONS) $(INCLUDEDIRS)
 
