@@ -12,8 +12,6 @@ glui32 glk_gestalt(glui32 id, glui32 val)
 glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr, 
     glui32 arrlen)
 {
-    int ix;
-    
     switch (id) {
         
         case gestalt_Version:

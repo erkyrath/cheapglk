@@ -590,7 +590,6 @@ static void gli_put_char_uni(stream_t *str, glui32 ch)
 
 static void gli_put_buffer(stream_t *str, char *buf, glui32 len)
 {
-    char *cx;
     glui32 lx;
     
     if (!str || !str->writable)

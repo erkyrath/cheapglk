@@ -308,7 +308,6 @@ void glk_fileref_delete_file(fileref_t *fref)
 /* This should only be called from startup code. */
 void glkunix_set_base_file(char *filename)
 {
-    char *cx;
     int ix;
   
     for (ix=strlen(filename)-1; ix >= 0; ix--) 
