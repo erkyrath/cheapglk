@@ -23,6 +23,7 @@ typedef signed long glsi32;
 /* These are the compile-time conditionals that reveal various Glk optional
     modules. */
 #define GLK_MODULE_UNICODE
+#define GLK_MODULE_UNICODE_NORM
 #define GLK_MODULE_IMAGE
 #define GLK_MODULE_SOUND
 #define GLK_MODULE_HYPERLINKS
@@ -295,6 +296,15 @@ extern void glk_request_line_event_uni(winid_t win, glui32 *buf,
     glui32 maxlen, glui32 initlen);
 
 #endif /* GLK_MODULE_UNICODE */
+
+#ifdef GLK_MODULE_UNICODE_NORM
+
+extern glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
+    glui32 numchars);
+extern glui32 glk_buffer_canon_normalize_uni(glui32 *buf, glui32 len,
+    glui32 numchars);
+
+#endif /* GLK_MODULE_UNICODE_NORM */
 
 #ifdef GLK_MODULE_IMAGE
 

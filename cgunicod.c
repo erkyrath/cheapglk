@@ -146,7 +146,6 @@ static glui32 gli_buffer_change_case(glui32 *buf, glui32 len,
     glui32 outcount;
     int dest_block_rest, dest_block_first;
     int dest_spec_rest, dest_spec_first;
-    glui32 lastch = ' ';
 
     switch (cond) {
     case COND_ALL:
@@ -274,4 +273,20 @@ glui32 glk_buffer_to_title_case_uni(glui32 *buf, glui32 len,
 }
 
 #endif /* GLK_MODULE_UNICODE */
+
+#ifdef GLK_MODULE_UNICODE_NORM
+
+glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
+    glui32 numchars)
+{
+    return 0; /*###*/
+}
+
+glui32 glk_buffer_canon_normalize_uni(glui32 *buf, glui32 len,
+    glui32 numchars)
+{
+    return 0; /*###*/
+}
+
+#endif /* GLK_MODULE_UNICODE_NORM */
 
