@@ -1,8 +1,8 @@
-/* gi_dispa.c: Dispatch layer for Glk API, version 0.7.0.
+/* gi_dispa.c: Dispatch layer for Glk API, version 0.7.###.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
-    http://www.eblong.com/zarf/glk/index.html
+    http://eblong.com/zarf/glk/
 
-    This file is copyright 1998-2004 by Andrew Plotkin. You may copy,
+    This file is copyright 1998-2010 by Andrew Plotkin. You may copy,
     distribute, and incorporate it into your own programs, by any means
     and under any conditions, as long as you do not modify it. You may
     also modify this file, incorporate it into your own programs,
@@ -78,6 +78,7 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "gestalt_SoundVolume", (9) },
     { "gestalt_Timer", (5) },
     { "gestalt_Unicode", (15) },
+    { "gestalt_UnicodeNorm", (16) },
     { "gestalt_Version", (0) },
 #ifdef GLK_MODULE_IMAGE
     { "imagealign_InlineCenter",  (0x03) },
@@ -270,6 +271,10 @@ static gidispatch_function_t function_table[] = {
     { 0x0140, glk_request_char_event_uni, "request_char_event_uni" },
     { 0x0141, glk_request_line_event_uni, "request_line_event_uni" },
 #endif /* GLK_MODULE_UNICODE */
+#ifdef GLK_MODULE_UNICODE_NORM
+    { 0x0123, glk_buffer_canon_decompose_uni, "buffer_canon_decompose_uni" },
+    { 0x0124, glk_buffer_canon_normalize_uni, "buffer_canon_normalize_uni" },
+#endif /* GLK_MODULE_UNICODE_NORM */
 };
 
 glui32 gidispatch_count_classes()

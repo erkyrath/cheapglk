@@ -80,6 +80,13 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr,
             return FALSE;
 #endif /* GLK_MODULE_UNICODE */
             
+        case gestalt_UnicodeNorm:
+#ifdef GLK_MODULE_UNICODE_NORM
+            return TRUE;
+#else
+            return FALSE;
+#endif /* GLK_MODULE_UNICODE_NORM */
+            
         case gestalt_Sound:
         case gestalt_SoundVolume:
         case gestalt_SoundNotify: 
