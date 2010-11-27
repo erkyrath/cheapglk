@@ -560,6 +560,13 @@ char *gidispatch_prototype(glui32 funcnum)
             return "3Qa&+#!IuIu:";
 #endif /* GLK_MODULE_UNICODE */
             
+#ifdef GLK_MODULE_UNICODE_NORM
+        case 0x0123: /* buffer_canon_decompose_uni */
+            return "3&+#IuIu:Iu";
+        case 0x0124: /* buffer_canon_normalize_uni */
+            return "3&+#IuIu:Iu";
+#endif /* GLK_MODULE_UNICODE_NORM */
+            
         default:
             return NULL;
     }
@@ -1114,6 +1121,22 @@ void gidispatch_call(glui32 funcnum, glui32 numargs, gluniversal_t *arglist)
                     0, arglist[2].uint);
             break;
 #endif /* GLK_MODULE_UNICODE */
+
+#ifdef GLK_MODULE_UNICODE_NORM
+        case 0x0123: /* buffer_canon_decompose_uni */
+            if (arglist[0].ptrflag) 
+                arglist[5].uint = glk_buffer_canon_decompose_uni(arglist[1].array, arglist[2].uint, arglist[3].uint);
+            else
+                arglist[3].uint = glk_buffer_canon_decompose_uni(NULL, 0, arglist[1].uint);
+            break;
+        case 0x0124: /* buffer_canon_normalize_uni */
+            if (arglist[0].ptrflag) 
+                arglist[5].uint = glk_buffer_canon_normalize_uni(arglist[1].array, arglist[2].uint, arglist[3].uint);
+            else
+                arglist[3].uint = glk_buffer_canon_normalize_uni(NULL, 0, arglist[1].uint);
+            break;
+
+#endif /* GLK_MODULE_UNICODE_NORM */
             
         default:
             /* do nothing */
