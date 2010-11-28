@@ -276,10 +276,143 @@ glui32 glk_buffer_to_title_case_uni(glui32 *buf, glui32 len,
 
 #ifdef GLK_MODULE_UNICODE_NORM
 
+/* We're relying on the fact that cgunigen.c has already been included.
+   So don't try to use GLK_MODULE_UNICODE_NORM without GLK_MODULE_UNICODE.
+*/
+
+static glui32 combining_class(glui32 ch)
+{
+    return 0; /*###*/
+}
+
 glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
     glui32 numchars)
 {
-    return 0; /*###*/
+    /* The algorithm for the canonical decomposition of a string: For
+       each character, look up the decomposition in the decomp table.
+       Append the decomposition to the buffer. Finally, sort every
+       substring of the buffer which is made up of combining
+       characters (characters with a nonzero combining class). */
+
+    glui32 *dest = buf;
+    glui32 destsize = 0;
+    glui32 destlen = 0;
+    glui32 ix, jx;
+    int anycombining = FALSE;
+
+    /* We do this in place if at all possible. */
+
+    for (ix=0; ix<numchars; ix++) {
+        glui32 ch = buf[ix];
+        gli_decomp_block_t *block;
+        glui32 count, pos;
+
+        if (combining_class(ch))
+            anycombining = TRUE;
+
+        GET_DECOMP_BLOCK(ch, &block);
+        if (block) {
+            block += (ch & 0xFF);
+            count = (*block)[0];
+            pos = (*block)[1];
+        }
+        else {
+            GET_DECOMP_SPECIAL(ch, &count, &pos);
+        }
+
+        if (!count) {
+            /* The simple case: this character doesn't decompose. Push
+               it straight into the destination, unless we don't have
+               a destination buffer, in which case just advance a
+               character. */
+            if (dest != buf) {
+                if (destlen >= destsize) {
+                    destsize = destsize * 2;
+                    dest = (glui32 *)realloc(dest, destsize * sizeof(glui32));
+                    if (!dest)
+                        return 0;
+                }
+                dest[destlen] = ch;
+            }
+            destlen++;
+            continue;
+        }
+
+        /* Assume that a character with a decomposition has a
+           combining class somewhere in there. Not always true, but
+           it's simpler to assume it. */
+        anycombining = TRUE;
+
+        /* We now append count characters to the buffer, reading from
+           unigen_decomp_data[pos] onwards. None of these characters
+           are decomposable; that was already recursively expanded when
+           unigen_decomp_data was generated. */
+
+        if (dest == buf) {
+            /* Time to allocate a separate destination buffer. We
+               allow space equal to twice the original string length,
+               plus some. That's almost certainly enough. */
+            destsize = len * 2 + 16;
+            dest = (glui32 *)malloc(destsize * sizeof(glui32));
+            if (!dest)
+                return 0;
+            if (destlen)
+                memcpy(dest, buf, destlen * sizeof(glui32));
+        }
+        if (destlen+count >= destsize) {
+            /* Okay, that wasn't enough. Expand more. */
+            destsize = destsize * 2 + count;
+            dest = (glui32 *)realloc(dest, destsize * sizeof(glui32));
+            if (!dest)
+                return 0;
+        }
+        for (jx=0; jx<count; jx++) {
+            dest[destlen] = unigen_decomp_data[pos+jx];
+            destlen++;
+        }
+    }
+
+    if (anycombining) {
+        /* Now we sort groups of combining characters. This should be a
+           stable sort by the combining-class number. We're lazy and
+           nearly all groups are short, so we'll just bubble-sort. */
+        glui32 grpstart, grpend, kx;
+        ix = 0;
+        while (ix < destlen) {
+            if (!combining_class(dest[ix])) {
+                ix++;
+                continue;
+            }
+            grpstart = ix;
+            while (ix < destlen && combining_class(dest[ix])) 
+                ix++;
+            grpend = ix;
+            if (grpend - grpstart >= 2) {
+                /* Sort this group. */
+                for (jx = grpend-1; jx > grpstart; jx--) {
+                    for (kx = grpstart; kx < jx; kx++) {
+                        if (combining_class(dest[kx]) > combining_class(dest[kx+1])) {
+                            glui32 tmp = dest[kx];
+                            dest[kx] = dest[kx+1];
+                            dest[kx+1] = tmp;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (dest != buf) {
+        /* If we were forced to allocate a separate buffer, copy the
+           data back. */
+        ix = destlen;
+        if (ix > len)
+            ix = len;
+        if (ix)
+            memcpy(buf, dest, ix * sizeof(glui32));
+    }
+
+    return destlen;
 }
 
 glui32 glk_buffer_canon_normalize_uni(glui32 *buf, glui32 len,
