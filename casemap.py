@@ -48,7 +48,7 @@ except IOError:
 
 # parse UnicodeData.txt
 
-decomptable = {}
+recdecomptable = {}
 
 casetable = {}
 totalchars = 0
@@ -79,7 +79,7 @@ while 1:
             ent = [ int(el, 16) for el in decomp.split(' ') ]
             if len(ent) == 1:
                 ent = ent[0]
-            decomptable[val] = ent
+            recdecomptable[val] = ent
 
     upcase = val
     downcase = val
@@ -138,24 +138,46 @@ while 1:
     casetable[val] = (val, val, val) # placeholder
     specialtable[val] = speccase
 
-max_decompose_depth = 0
-
-def try_decompose(val, depth=0):
-    global max_decompose_depth
-    max_decompose_depth = max(max_decompose_depth, depth+1)
-    res = decomptable.get(val)
-    if res:
-        if type(res) == list:
-            for subval in res:
-                try_decompose(subval, depth+1)
-        else:
-            try_decompose(res, depth+1)
+# The decomposition data we have extracted is recursive; a character can
+# decompose to more decomposable characters. We now expand that into
+# flat lists. (It only takes a little more space, because most characters
+# aren't recursive that way.)
     
-for val in decomptable.keys():
+decomptable = {}
+
+def try_decompose(val):
+    if decomptable.has_key(val):
+        return decomptable[val]
+    res = recdecomptable.get(val)
+    if not res:
+        ls = [ val ]
+        decomptable[val] = ls
+        return ls
+        
+    if type(res) == list:
+        ls = []
+        for subval in res:
+            ls.extend(try_decompose(subval))
+        decomptable[val] = ls
+        return ls
+    else:
+        ls = try_decompose(res)
+        decomptable[val] = ls
+        return ls
+
+for val in recdecomptable.keys():
     try_decompose(val)
+for val in decomptable.keys():
+    if decomptable[val] == [ val ]:
+        decomptable.pop(val)
+
+if (len(recdecomptable) != len(decomptable)):
+    raise Exception('Decomposition table changed length in expansion!')
+        
+max_decompose_length = max([ len(ls) for ls in decomptable.values() ])
 
 sys.stderr.write(str(totalchars) + ' characters in the Unicode database\n')
-sys.stderr.write(str(len(decomptable)) + ' characters with decompositions (max recursion depth ' + str(max_decompose_depth) + ')\n')
+sys.stderr.write(str(len(decomptable)) + ' characters with decompositions (max length ' + str(max_decompose_length) + ')\n')
 sys.stderr.write(str(len(casetable)) + ' characters which can change case\n')
 sys.stderr.write(str(titleablechars) + ' characters with a distinct title-case\n')
 sys.stderr.write(str(totalspecialcases) + ' characters with length changes\n')
@@ -362,6 +384,17 @@ if (output == 'c'):
             else:
                 block = blocktable[blocknum]
             block[val & 0xFF] = (count, pos)
+
+    print 'static glui32 unigen_decomp_data[%d] = {' % (len(offsets),)
+    rowcount = 0
+    for val in offsets:
+        if (rowcount >= 8):
+            print
+            rowcount = 0
+        print '%s,' % (hex(val)),
+        rowcount += 1
+    print '};'
+    print
             
     blockkeys = blocktable.keys()
     blockkeys.sort()
@@ -377,7 +410,7 @@ if (output == 'c'):
                 pos = 0
             else:
                 (count, pos) = res
-            print '    { %s, %s },' % (str(count), hex(pos))
+            print '    { %s, %s },' % (str(count), str(pos))
         print '};'
         print
         
@@ -401,7 +434,7 @@ if (output == 'c'):
     for val in extrakeys:
         (count, pos) = extratable[val]
         print '    case ' + hex(val) + ':  \\'
-        print '        *countptr = ' + str(count) + '; *posptr = ' + hex(pos) + ';  \\'
+        print '        *countptr = ' + str(count) + '; *posptr = ' + str(pos) + ';  \\'
         print '        break;  \\'
     print '    default:  \\'
     print '        *countptr = 0;  \\'
