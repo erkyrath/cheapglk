@@ -138,8 +138,24 @@ while 1:
     casetable[val] = (val, val, val) # placeholder
     specialtable[val] = speccase
 
+max_decompose_depth = 0
+
+def try_decompose(val, depth=0):
+    global max_decompose_depth
+    max_decompose_depth = max(max_decompose_depth, depth+1)
+    res = decomptable.get(val)
+    if res:
+        if type(res) == list:
+            for subval in res:
+                try_decompose(subval, depth+1)
+        else:
+            try_decompose(res, depth+1)
+    
+for val in decomptable.keys():
+    try_decompose(val)
+
 sys.stderr.write(str(totalchars) + ' characters in the Unicode database\n')
-sys.stderr.write(str(len(decomptable)) + ' characters with decompositions\n')
+sys.stderr.write(str(len(decomptable)) + ' characters with decompositions (max recursion depth ' + str(max_decompose_depth) + ')\n')
 sys.stderr.write(str(len(casetable)) + ' characters which can change case\n')
 sys.stderr.write(str(titleablechars) + ' characters with a distinct title-case\n')
 sys.stderr.write(str(totalspecialcases) + ' characters with length changes\n')
