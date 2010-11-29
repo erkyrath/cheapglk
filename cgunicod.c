@@ -282,7 +282,7 @@ glui32 glk_buffer_to_title_case_uni(glui32 *buf, glui32 len,
 
 static glui32 combining_class(glui32 ch)
 {
-    return 0; /*###*/
+    RETURN_COMBINING_CLASS(ch);
 }
 
 glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
