@@ -383,6 +383,8 @@ glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
                 ix++;
                 continue;
             }
+            if (ix >= destlen)
+                break;
             grpstart = ix;
             while (ix < destlen && combining_class(dest[ix])) 
                 ix++;
