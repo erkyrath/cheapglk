@@ -412,6 +412,7 @@ glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
             ix = len;
         if (ix)
             memcpy(buf, dest, ix * sizeof(glui32));
+        free(dest);
     }
 
     return destlen;
