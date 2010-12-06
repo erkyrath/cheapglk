@@ -84,8 +84,6 @@ while 1:
         decomp = ls[5]
         if not decomp.startswith('<'):
             ent = [ int(el, 16) for el in decomp.split(' ') ]
-            if len(ent) == 1:
-                ent = ent[0]
             recdecomptable[val] = ent
 
     upcase = val
@@ -159,16 +157,11 @@ def try_decompose(val):
         decomptable[val] = ls
         return ls
         
-    if type(res) == list:
-        ls = []
-        for subval in res:
-            ls.extend(try_decompose(subval))
-        decomptable[val] = ls
-        return ls
-    else:
-        ls = try_decompose(res)
-        decomptable[val] = ls
-        return ls
+    ls = []
+    for subval in res:
+        ls.extend(try_decompose(subval))
+    decomptable[val] = ls
+    return ls
 
 for val in recdecomptable.keys():
     try_decompose(val)
