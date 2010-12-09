@@ -195,6 +195,7 @@ max_decompose_length = max([ len(ls) for ls in decomptable.values() ])
 sys.stderr.write(str(totalchars) + ' characters in the Unicode database\n')
 sys.stderr.write(str(len(combintable)) + ' characters with combining classes\n')
 sys.stderr.write(str(len(decomptable)) + ' characters with decompositions (max length ' + str(max_decompose_length) + ')\n')
+sys.stderr.write(str(len(compotable)) + ' character compositions\n')
 sys.stderr.write(str(len(casetable)) + ' characters which can change case\n')
 sys.stderr.write(str(titleablechars) + ' characters with a distinct title-case\n')
 sys.stderr.write(str(totalspecialcases) + ' characters with length changes\n')
@@ -395,6 +396,42 @@ if (output == 'c'):
     print '}  \\'
     print 'return 0;'
     
+    print
+
+    # The composition tables.
+
+    usetable = {}
+    
+    for (val, map) in compotable.items():
+        blocknum = val >> 8
+        if not usetable.has_key(blocknum):
+            usetable[blocknum] = {}
+        usetable[blocknum][val] = map
+    
+    usels = usetable.keys()
+    usels.sort()
+
+    print '#define RETURN_COMPOSITION(ch1, ch2)  \\'
+    print 'switch ((glui32)(ch1) >> 8) {  \\'
+    for blocknum in usels:
+        print '  case %d:  \\' % (blocknum,)
+        print '    switch (ch1) {  \\'
+        map = usetable[blocknum]
+        ls = map.keys()
+        ls.sort()
+        for val in ls:
+            print '      case %d:  \\' % (val,)
+            print '        switch (ch2) {  \\'
+            subls = map[val].items()
+            subls.sort()
+            for (val2, ent) in subls:
+                print '          case %d: return %d;  \\' % (val2, ent)
+            print '        }  \\'
+            print '        return 0;  \\'
+        print '    }  \\'
+        print '    return 0;  \\'
+    print '}  \\'
+    print 'return 0;'
     print
 
     # The decomposition tables.

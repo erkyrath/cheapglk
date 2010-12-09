@@ -127,6 +127,10 @@ glui32 gli_parse_utf8(unsigned char *buf, glui32 buflen,
 
 #ifdef GLK_MODULE_UNICODE
 
+/* The cgunigen.c file is generated from Unicode data tables, and it's
+   sort of enormous. Feel free to implement all these case-changing and
+   normalization functions using your OS's native facilities. */
+
 #include "cgunigen.c"
 
 #define CASE_UPPER (0)
@@ -285,8 +289,15 @@ static glui32 combining_class(glui32 ch)
     RETURN_COMBINING_CLASS(ch);
 }
 
-glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
-    glui32 numchars)
+/* This returns a new buffer (possibly longer). The caller must free
+   it. The original buffer is unchanged.
+
+   (It would be possible to do this in place, in simple cases. But
+   the canon_normalize function has to call this and then deal with
+   recomposing. It's easier to always allocate a new buffer.)
+*/
+static glui32 *gli_buffer_canon_decompose_uni(glui32 *buf, 
+    glui32 *numcharsref)
 {
     /* The algorithm for the canonical decomposition of a string: For
        each character, look up the decomposition in the decomp table.
@@ -294,13 +305,15 @@ glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
        substring of the buffer which is made up of combining
        characters (characters with a nonzero combining class). */
 
-    glui32 *dest = buf;
-    glui32 destsize = 0;
+    glui32 numchars = *numcharsref;
+    glui32 destsize = numchars * 2 + 16;
+    glui32 *dest = (glui32 *)malloc(destsize * sizeof(glui32));
     glui32 destlen = 0;
     glui32 ix, jx;
     int anycombining = FALSE;
 
-    /* We do this in place if at all possible. */
+    if (!dest)
+        return NULL;
 
     for (ix=0; ix<numchars; ix++) {
         glui32 ch = buf[ix];
@@ -322,18 +335,14 @@ glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
 
         if (!count) {
             /* The simple case: this character doesn't decompose. Push
-               it straight into the destination, unless we don't have
-               a destination buffer, in which case just advance a
-               character. */
-            if (dest != buf) {
-                if (destlen >= destsize) {
-                    destsize = destsize * 2;
-                    dest = (glui32 *)realloc(dest, destsize * sizeof(glui32));
-                    if (!dest)
-                        return 0;
-                }
-                dest[destlen] = ch;
+               it straight into the destination. */
+            if (destlen >= destsize) {
+                destsize = destsize * 2;
+                dest = (glui32 *)realloc(dest, destsize * sizeof(glui32));
+                if (!dest)
+                    return NULL;
             }
+            dest[destlen] = ch;
             destlen++;
             continue;
         }
@@ -348,23 +357,12 @@ glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
            are decomposable; that was already recursively expanded when
            unigen_decomp_data was generated. */
 
-        if (dest == buf) {
-            /* Time to allocate a separate destination buffer. We
-               allow space equal to twice the original string length,
-               plus some. That's almost certainly enough. */
-            destsize = len * 2 + 16;
-            dest = (glui32 *)malloc(destsize * sizeof(glui32));
-            if (!dest)
-                return 0;
-            if (destlen)
-                memcpy(dest, buf, destlen * sizeof(glui32));
-        }
         if (destlen+count >= destsize) {
             /* Okay, that wasn't enough. Expand more. */
             destsize = destsize * 2 + count;
             dest = (glui32 *)realloc(dest, destsize * sizeof(glui32));
             if (!dest)
-                return 0;
+                return NULL;
         }
         for (jx=0; jx<count; jx++) {
             dest[destlen] = unigen_decomp_data[pos+jx];
@@ -404,24 +402,86 @@ glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
         }
     }
 
-    if (dest != buf) {
-        /* If we were forced to allocate a separate buffer, copy the
-           data back. */
-        ix = destlen;
-        if (ix > len)
-            ix = len;
-        if (ix)
-            memcpy(buf, dest, ix * sizeof(glui32));
-        free(dest);
+    *numcharsref = destlen;
+    return dest;
+}
+
+static glui32 check_composition(glui32 ch1, glui32 ch2)
+{
+    RETURN_COMPOSITION(ch1, ch2);
+}
+
+/* This copies from buf to dest, composing characters where possible.
+   The destination is limited to len characters. The returned number
+   of characters may be more than len, but will not be more than
+   numchars.
+*/
+static glui32 gli_buffer_canon_compose_uni(glui32 *buf, glui32 *dest, 
+    glui32 len, glui32 numchars)
+{
+    glui32 curch, nextch, pos, res, destlen;
+
+    if (numchars == 0)
+        return 0;
+
+    curch = buf[0];
+    pos = 1;
+    destlen = 0;
+    while (1) {
+        if (pos >= numchars) {
+            if (destlen < len)
+                dest[destlen] = curch;
+            destlen++;
+            break;
+        }
+        nextch = buf[pos++];
+        res = check_composition(curch, nextch);
+        if (!res) {
+            if (destlen < len)
+                dest[destlen] = curch;
+            destlen++;
+            curch = nextch;
+            continue;
+        }
+        curch = res;
     }
 
     return destlen;
 }
 
+glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
+    glui32 numchars)
+{
+    glui32 *dest = gli_buffer_canon_decompose_uni(buf, &numchars);
+    glui32 newlen;
+
+    if (!dest)
+        return 0;
+
+    /* Copy the data back. */
+    newlen = numchars;
+    if (newlen > len)
+        newlen = len;
+    if (newlen)
+        memcpy(buf, dest, newlen * sizeof(glui32));
+    free(dest);
+
+    return numchars;
+}
+
 glui32 glk_buffer_canon_normalize_uni(glui32 *buf, glui32 len,
     glui32 numchars)
 {
-    return 0; /*###*/
+    glui32 *dest = gli_buffer_canon_decompose_uni(buf, &numchars);
+
+    if (!dest)
+        return 0;
+
+    /* Now compose back to the original buffer. */
+    numchars = gli_buffer_canon_compose_uni(dest, buf, len, numchars);
+
+    free(dest);
+    return numchars;
 }
 
 #endif /* GLK_MODULE_UNICODE_NORM */
