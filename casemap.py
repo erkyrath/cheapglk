@@ -737,7 +737,12 @@ if (output == 'js'):
             map[key] = val
     generate_js_table_decomp('title', map)
 
-    generate_js_table_decomp('decomp', decomptable, 16)
+    map = {}
+    for (key, val) in decomptable.items():
+        if (len(val) == 1):
+            val = val[0]
+        map[key] = val
+    generate_js_table_decomp('decomp', map, 16)
     generate_js_table_decomp('combin', combintable, 100)
 
     print '/* list all of unicode_compo_table */'
