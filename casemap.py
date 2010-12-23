@@ -54,6 +54,9 @@ recdecomptable = {}
 compotable = {}
 
 casetable = {}
+upcasetable = {}
+downcasetable = {}
+titlecasetable = {}
 totalchars = 0
 titleablechars = 0
 totalspecialcases = 0
@@ -93,10 +96,16 @@ while 1:
 
     if (len(ls) > 12 and ls[12]):
         upcase = int(ls[12], 16)
+        if (val != upcase):
+            upcasetable[val] = [upcase]
     if (len(ls) > 13 and ls[13]):
         downcase = int(ls[13], 16)
+        if (val != downcase):
+            downcasetable[val] = [downcase]
     if (len(ls) > 14 and ls[14]):
         titlecase = int(ls[14], 16)
+        if (val != titlecase):
+            titlecasetable[val] = [titlecase]
 
     if (val == upcase and val == downcase and val == titlecase):
         continue
@@ -134,12 +143,19 @@ while 1:
         continue
         
     totalspecialcases = totalspecialcases+1
+
+    upcase = [ int(st, 16) for st in ls[3].split(' ') ]
+    downcase = [ int(st, 16) for st in ls[1].split(' ') ]
+    titlecase = [ int(st, 16) for st in ls[2].split(' ') ]
+
+    if (upcase != [val]):
+        upcasetable[val] = upcase
+    if (downcase != [val]):
+        downcasetable[val] = downcase
+    if (titlecase != [val]):
+        titlecasetable[val] = titlecase
     
-    speccase = (
-        [ int(st, 16) for st in ls[3].split(' ') ],  # upper
-        [ int(st, 16) for st in ls[1].split(' ') ],  # lower
-        [ int(st, 16) for st in ls[2].split(' ') ]   # title
-    )
+    speccase = ( upcase, downcase, titlecase )
 
     casetable[val] = (val, val, val) # placeholder
     specialtable[val] = speccase
@@ -578,6 +594,7 @@ def generate_js_table_case(label, pairs, offsets):
     print '/* add all the regular cases to unicode_%s_table */' % (label,)
     print '(function() {'
     print '  var ls, ix, val;'
+    print '  var map = unicode_%s_table;' % (label,)
     ls = offmaps.keys()
     ls.sort()
     for offset in ls:
@@ -592,12 +609,12 @@ def generate_js_table_case(label, pairs, offsets):
         (runs, extras) = find_runs(offmaps[offset], 16)
         for (start, end, jump) in runs:
             print '  for (val=%s; val<=%s; val+=%s) {' % (str(start), str(end), str(jump))
-            print '    unicode_%s_table[val] = val%s;' % (label, op)
+            print '    map[val] = val%s;' % (op,)
             print '  }'
         if (extras and len(extras) < 3):
             # It's more efficient to dump a few extras as single lines.
             for val in extras:
-                print '  unicode_%s_table[%d] = %d;' % (label, val, val-offset)
+                print '  map[%d] = %d;' % (val, val-offset)
         elif (extras):
             # But if we have a lot of extras, we should loop over an array.
             print '  ls = ['
@@ -612,7 +629,7 @@ def generate_js_table_case(label, pairs, offsets):
             print '  ];'
             print '  for (ix=0; ix<%d; ix++) {' % (len(extras),)
             print '    val = ls[ix];'
-            print '    unicode_%s_table[val] = val%s;' % (label, op)
+            print '    map[val] = val%s;' % (op,)
             print '  }'
     print '})();'
 
@@ -653,6 +670,7 @@ def generate_js_table_decomp(label, table, runmin=16):
     print '/* add all the regular cases to unicode_%s_table */' % (label,)
     print '(function() {'
     print '  var ls, ix, val;'
+    print '  var map = unicode_%s_table;' % (label,)
     for (start, end, jump) in runs:
         print '  ls = ['
         rowcount = 0
@@ -672,7 +690,7 @@ def generate_js_table_decomp(label, table, runmin=16):
         print '  ];'
         print '  for (ix=0; ix<%d; ix++) {' % (end-start+1,)
         print '    val = ls[ix];'
-        print '    unicode_%s_table[ix+%d] = val;' % (label, start)
+        print '    map[ix+%d] = val;' % (start,)
         print '  }'
         
     print '})();'
@@ -685,33 +703,39 @@ if (output == 'js'):
     print '/* Derived from Unicode data files, Unicode version %s. */' % (unicode_version,)
     print
     
-    keys = casetable.keys()
-    keys.sort()
+    tablelist = [ (upcasetable, 'upper'),
+                  (downcasetable, 'lower') ]
+    for (map, label) in tablelist:
+        keys = map.keys()
+        keys.sort()
 
-    tablelist = [ (0, 'upper'),
-                  (1, 'lower'),
-                  (2, 'title') ]
-    for (index, label) in tablelist:
         pairs = []
         offsets = {}
         for key in keys:
-            if (specialtable.has_key(key)):
-                ls = specialtable[key][index]
-                if (len(ls) != 1):
-                    pairs.append( (key, ls) )
-                    continue
-                val = ls[0]
-            elif (casetable.has_key(key)):
-                val = casetable[key][index]
-            else:
+            if (not map.has_key(key)):
                 continue
-            if (val == key):
+            ls = map[key]
+            if (len(ls) != 1):
+                pairs.append( (key, ls) )
                 continue
+            val = ls[0]
             offset = key-val
             offsets[offset] = offsets.get(offset, 0) + 1
             pairs.append( (key, val) )
 
         generate_js_table_case(label, pairs, offsets)
+
+    map = {}
+    for key in upcasetable.keys():
+        if (not titlecasetable.has_key(key)):
+            map[key] = key
+    for key in titlecasetable.keys():
+        if (titlecasetable[key] != upcasetable.get(key)):
+            val = titlecasetable[key]
+            if (len(val) == 1):
+                val = val[0]
+            map[key] = val
+    generate_js_table_decomp('title', map)
 
     generate_js_table_decomp('decomp', decomptable, 16)
     generate_js_table_decomp('combin', combintable, 100)
