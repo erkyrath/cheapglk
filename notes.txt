@@ -1,6 +1,6 @@
 CheapGlk: Cheapass Implementation of the Glk API.
 
-CheapGlk Library: version 0.9.1.
+CheapGlk Library: version 0.9.2###.
 Glk API which this implements: version 0.7.0.
 Designed by Andrew Plotkin <erkyrath@eblong.com>
 http://eblong.com/zarf/glk/index.html
@@ -178,6 +178,11 @@ or Unicode input will fail.) In "-u" mode, CheapGlk declares that it
 can input and output all Unicode characters.
 
 * Version History
+
+0.9.2###:
+    Added glkunix_stream_open_pathname_gen(), a more general form of
+    the pathname opening function in the startup code. (This is needed
+    for profiling improvements.)
 
 0.9.1:
     Fixed file-creation bug in glk_stream_open_file().
