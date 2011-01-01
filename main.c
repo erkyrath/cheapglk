@@ -170,9 +170,18 @@ int main(int argc, char *argv[])
             glkunix_argumentlist_t *argform;
             printf("game options:\n");
             for (argform = glkunix_arguments; 
-                argform->argtype != glkunix_arg_End; 
+                argform->argtype != glkunix_arg_End;
                 argform++) {
-                printf("  %s\n", argform->desc);
+                if (strlen(argform->name) == 0)
+                    printf("  %s\n", argform->desc);
+                else if (argform->argtype == glkunix_arg_ValueFollows)
+                    printf("  %s val: %s\n", argform->name, argform->desc);
+                else if (argform->argtype == glkunix_arg_NumberValue)
+                    printf("  %s val: %s\n", argform->name, argform->desc);
+                else if (argform->argtype == glkunix_arg_ValueCanFollow)
+                    printf("  %s [val]: %s\n", argform->name, argform->desc);
+                else
+                    printf("  %s: %s\n", argform->name, argform->desc);
             }
         }
         return 1;
