@@ -84,6 +84,7 @@ void glk_select(event_t *event)
     }
     
     if (win->char_request) {
+        char *res;
         char buf[256];
         glui32 kval;
         int len;
@@ -94,7 +95,12 @@ void glk_select(event_t *event)
             be turned into a special keycode (and so would other keys,
             if we could recognize them.) */
  
-        fgets(buf, 255, stdin);
+        res = fgets(buf, 255, stdin);
+        if (!res) {
+            printf("\n<end of input>\n");
+            glk_exit();
+        }
+
         if (!gli_utf8input) {
             kval = buf[0];
         }
@@ -124,11 +130,17 @@ void glk_select(event_t *event)
     }
     else {
         /* line_request */
+        char *res;
         char buf[256];
         int val;
         glui32 ix;
 
-        fgets(buf, 255, stdin);
+        res = fgets(buf, 255, stdin);
+        if (!res) {
+            printf("\n<end of input>\n");
+            glk_exit();
+        }
+
         val = strlen(buf);
         if (val && (buf[val-1] == '\n' || buf[val-1] == '\r'))
             val--;

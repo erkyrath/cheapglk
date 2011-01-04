@@ -183,6 +183,7 @@ can input and output all Unicode characters.
 
 0.9.2###:
     Added -q option to silence banner.
+    The library now exits cleanly if stdin closes.
     Added glkunix_stream_open_pathname_gen(), a more general form of
     the pathname opening function in the startup code. (This is needed
     for profiling improvements.)
