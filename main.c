@@ -15,7 +15,9 @@ static int inittime = FALSE;
 int main(int argc, char *argv[])
 {
     int ix, jx, val;
-    int errflag = 0;
+    int display_version = TRUE;
+
+    int errflag = FALSE;
     glkunix_startup_t startdata;
     
     /* Test for compile-time errors. If one of these spouts off, you
@@ -66,7 +68,7 @@ int main(int argc, char *argv[])
                 
                 if (argform->argtype == glkunix_arg_ValueFollows) {
                     if (ix+1 >= argc) {
-                        printf("%s: %s must be followed by a value\n", 
+                        printf("%s: %s must be followed by a value\n\n", 
                             argv[0], argform->name);
                         errflag = TRUE;
                         break;
@@ -87,7 +89,7 @@ int main(int argc, char *argv[])
                 else if (argform->argtype == glkunix_arg_NumberValue) {
                     if (ix+1 >= argc
                         || (atoi(argv[ix+1]) == 0 && argv[ix+1][0] != '0')) {
-                        printf("%s: %s must be followed by a number\n", 
+                        printf("%s: %s must be followed by a number\n\n", 
                             argv[0], argform->name);
                         errflag = TRUE;
                         break;
@@ -124,7 +126,7 @@ int main(int argc, char *argv[])
                             val = atoi(argv[ix]);
                     }
                     if (val < 8)
-                        errflag = 1;
+                        errflag = TRUE;
                     else
                         gli_screenwidth = val;
                     break;
@@ -138,7 +140,7 @@ int main(int argc, char *argv[])
                             val = atoi(argv[ix]);
                     }
                     if (val < 2)
-                        errflag = 1;
+                        errflag = TRUE;
                     else
                         gli_screenheight = val;
                     break;
@@ -149,15 +151,18 @@ int main(int argc, char *argv[])
                         else if (argv[ix][2] == 'o')
                             gli_utf8output = TRUE;
                         else
-                            errflag = 1;
+                            errflag = TRUE;
                     }
                     else {
                         gli_utf8output = TRUE;
                         gli_utf8input = TRUE;
                     }
                     break;
+                case 'q':
+                    display_version = FALSE;
+                    break;
                 default:
-                    printf("%s: unknown option: %s\n", argv[0], argv[ix]);
+                    printf("%s: unknown option: %s\n\n", argv[0], argv[ix]);
                     errflag = TRUE;
                     break;
             }
@@ -165,14 +170,23 @@ int main(int argc, char *argv[])
     }
 
     if (errflag) {
-        printf("usage: %s -w WIDTH -h HEIGHT -u[i|o]\n", argv[0]);
+        printf("usage: %s -w WIDTH -h HEIGHT -u[i|o] -q\n", argv[0]);
         if (glkunix_arguments[0].argtype != glkunix_arg_End) {
             glkunix_argumentlist_t *argform;
             printf("game options:\n");
             for (argform = glkunix_arguments; 
-                argform->argtype != glkunix_arg_End; 
+                argform->argtype != glkunix_arg_End;
                 argform++) {
-                printf("  %s\n", argform->desc);
+                if (strlen(argform->name) == 0)
+                    printf("  %s\n", argform->desc);
+                else if (argform->argtype == glkunix_arg_ValueFollows)
+                    printf("  %s val: %s\n", argform->name, argform->desc);
+                else if (argform->argtype == glkunix_arg_NumberValue)
+                    printf("  %s val: %s\n", argform->name, argform->desc);
+                else if (argform->argtype == glkunix_arg_ValueCanFollow)
+                    printf("  %s [val]: %s\n", argform->name, argform->desc);
+                else
+                    printf("  %s: %s\n", argform->name, argform->desc);
             }
         }
         return 1;
@@ -187,8 +201,10 @@ int main(int argc, char *argv[])
     }
     inittime = FALSE;
 
-    printf("Welcome to the Cheap Glk Implementation, library version %s.\n\n", 
-        LIBRARY_VERSION);
+    if (display_version) {
+        printf("Welcome to the Cheap Glk Implementation, library version %s.\n\n", 
+            LIBRARY_VERSION);
+    }
     glk_main();
     glk_exit();
     
@@ -197,10 +213,29 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+/* This opens a file for reading or writing. (You cannot open a file
+   for appending using this call.)
+
+   This should be used only by glkunix_startup_code(). 
+*/
+strid_t glkunix_stream_open_pathname_gen(char *pathname, glui32 writemode,
+    glui32 textmode, glui32 rock)
+{
+    if (!inittime)
+        return 0;
+    return gli_stream_open_pathname(pathname, (writemode != 0), (textmode != 0), rock);
+}
+
+/* This opens a file for reading. It is a less-general form of 
+   glkunix_stream_open_pathname_gen(), preserved for backwards 
+   compatibility.
+
+   This should be used only by glkunix_startup_code().
+*/
 strid_t glkunix_stream_open_pathname(char *pathname, glui32 textmode, 
     glui32 rock)
 {
     if (!inittime)
         return 0;
-    return gli_stream_open_pathname(pathname, (textmode != 0), rock);
+    return gli_stream_open_pathname(pathname, FALSE, (textmode != 0), rock);
 }

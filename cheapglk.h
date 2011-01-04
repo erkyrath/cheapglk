@@ -146,8 +146,8 @@ extern window_t *gli_window_get(void);
 extern stream_t *gli_new_stream(int type, int readable, int writable, 
     glui32 rock);
 extern void gli_delete_stream(stream_t *str);
-extern strid_t gli_stream_open_pathname(char *pathname, int textmode,
-    glui32 rock);
+extern strid_t gli_stream_open_pathname(char *pathname, int writemode, 
+    int textmode, glui32 rock);
 extern void gli_stream_set_current(stream_t *str);
 extern void gli_stream_fill_result(stream_t *str, 
     stream_result_t *result);

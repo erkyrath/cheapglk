@@ -181,6 +181,7 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
 {
     fileref_t *fref;
     char buf[256], newbuf[256];
+    char *res;
     char *cx;
     int val;
     char *prompt, *prompt2;
@@ -208,7 +209,12 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
     
     printf("%s %s: ", prompt, prompt2);
     
-    fgets(buf, 255, stdin);
+    res = fgets(buf, 255, stdin);
+    if (!res) {
+        printf("\n<end of input>\n");
+        glk_exit();
+    }
+
     val = strlen(buf);
     
     while (val 
