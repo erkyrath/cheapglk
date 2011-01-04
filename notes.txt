@@ -28,6 +28,8 @@ newlines.)
     -uo: Generate UTF-8 encoded text on stdout.
     -u: Both of the above.
 
+    -q: Don't display the "Welcome to CheapGlk" banner before the game.
+
 * Notes on building this mess:
 
 See the top of the Makefile for comments on installation.
