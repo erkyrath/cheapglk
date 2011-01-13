@@ -49,10 +49,12 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "evtype_Redraw", (6) },
     { "evtype_SoundNotify", (7) },
     { "evtype_Timer", (1) },
+
     { "filemode_Read", (0x02) },
     { "filemode_ReadWrite", (0x03) },
     { "filemode_Write", (0x01) },
     { "filemode_WriteAppend", (0x05) },
+
     { "fileusage_BinaryMode", (0x000) },
     { "fileusage_Data", (0x00) },
     { "fileusage_InputRecord", (0x03) },
@@ -60,6 +62,7 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "fileusage_TextMode",   (0x100) },
     { "fileusage_Transcript", (0x02) },
     { "fileusage_TypeMask", (0x0f) },
+
     { "gestalt_CharInput", (1) },
     { "gestalt_CharOutput", (3) },
     { "gestalt_CharOutput_ApproxPrint", (1) },
@@ -71,6 +74,9 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "gestalt_HyperlinkInput", (12) },
     { "gestalt_Hyperlinks", (11) },
     { "gestalt_LineInput", (2) },
+    { "gestalt_LineInputEcho", (17) },
+    { "gestalt_LineTerminatorKey", (19) },
+    { "gestalt_LineTerminators", (18) },
     { "gestalt_MouseInput", (4) },
     { "gestalt_Sound", (8) },
     { "gestalt_SoundMusic", (13) },
@@ -80,13 +86,13 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "gestalt_Unicode", (15) },
     { "gestalt_UnicodeNorm", (16) },
     { "gestalt_Version", (0) },
-#ifdef GLK_MODULE_IMAGE
+
     { "imagealign_InlineCenter",  (0x03) },
     { "imagealign_InlineDown",  (0x02) },
     { "imagealign_MarginLeft",  (0x04) },
     { "imagealign_MarginRight",  (0x05) },
     { "imagealign_InlineUp",  (0x01) },
-#endif /* GLK_MODULE_IMAGE */
+
     { "keycode_Delete",   (0xfffffff9) },
     { "keycode_Down",     (0xfffffffb) },
     { "keycode_End",      (0xfffffff3) },
@@ -113,9 +119,11 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "keycode_Tab",      (0xfffffff7) },
     { "keycode_Unknown",  (0xffffffff) },
     { "keycode_Up",       (0xfffffffc) },
+
     { "seekmode_Current", (1) },
     { "seekmode_End", (2) },
     { "seekmode_Start", (0) },
+
     { "style_Alert", (5) },
     { "style_BlockQuote", (7) },
     { "style_Emphasized", (1) },
@@ -143,14 +151,19 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "stylehint_just_LeftFlush", (0) },
     { "stylehint_just_LeftRight", (1) },
     { "stylehint_just_RightFlush", (3) },
+
     { "winmethod_Above", (0x02)  },
     { "winmethod_Below", (0x03)  },
+    { "winmethod_Border", (0x000)  },
+    { "winmethod_BorderMask", (0x100)  },
     { "winmethod_DirMask", (0x0f) },
     { "winmethod_DivisionMask", (0xf0) },
     { "winmethod_Fixed", (0x10) },
     { "winmethod_Left",  (0x00)  },
+    { "winmethod_NoBorder", (0x100)  },
     { "winmethod_Proportional", (0x20) },
     { "winmethod_Right", (0x01)  },
+
     { "wintype_AllTypes", (0)  },
     { "wintype_Blank", (2)  },
     { "wintype_Graphics", (5)  },
@@ -275,6 +288,12 @@ static gidispatch_function_t function_table[] = {
     { 0x0123, glk_buffer_canon_decompose_uni, "buffer_canon_decompose_uni" },
     { 0x0124, glk_buffer_canon_normalize_uni, "buffer_canon_normalize_uni" },
 #endif /* GLK_MODULE_UNICODE_NORM */
+#ifdef GLK_MODULE_LINE_ECHO
+    { 0x0150, glk_set_echo_line_event, "set_echo_line_event" },
+#endif /* GLK_MODULE_LINE_ECHO */
+#ifdef GLK_MODULE_LINE_TERMINATORS
+    { 0x0151, glk_set_terminators_line_event, "set_terminators_line_event" },
+#endif /* GLK_MODULE_LINE_TERMINATORS */
 };
 
 glui32 gidispatch_count_classes()
@@ -566,6 +585,16 @@ char *gidispatch_prototype(glui32 funcnum)
         case 0x0124: /* buffer_canon_normalize_uni */
             return "3&+#IuIu:Iu";
 #endif /* GLK_MODULE_UNICODE_NORM */
+
+#ifdef GLK_MODULE_LINE_ECHO
+        case 0x0150: /* set_echo_line_event */
+            return "2QaIu:";
+#endif /* GLK_MODULE_LINE_ECHO */
+
+#ifdef GLK_MODULE_LINE_TERMINATORS
+        case 0x0151: /* set_terminators_line_event */
+            return "2Qa>#Iu:";
+#endif /* GLK_MODULE_LINE_TERMINATORS */
             
         default:
             return NULL;
@@ -1135,8 +1164,24 @@ void gidispatch_call(glui32 funcnum, glui32 numargs, gluniversal_t *arglist)
             else
                 arglist[3].uint = glk_buffer_canon_normalize_uni(NULL, 0, arglist[1].uint);
             break;
-
 #endif /* GLK_MODULE_UNICODE_NORM */
+            
+#ifdef GLK_MODULE_LINE_ECHO
+        case 0x0150: /* set_echo_line_event */
+            glk_set_echo_line_event(arglist[0].opaqueref, arglist[1].uint);
+            break;
+#endif /* GLK_MODULE_LINE_ECHO */
+
+#ifdef GLK_MODULE_LINE_TERMINATORS
+        case 0x0151: /* set_terminators_line_event */
+            if (arglist[1].ptrflag) 
+                glk_set_terminators_line_event(arglist[0].opaqueref, 
+                    arglist[2].array, arglist[3].uint);
+            else
+                glk_set_terminators_line_event(arglist[0].opaqueref, 
+                    NULL, 0);
+            break;
+#endif /* GLK_MODULE_LINE_TERMINATORS */
             
         default:
             /* do nothing */

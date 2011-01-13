@@ -25,6 +25,8 @@ typedef int32_t glsi32;
 
 /* These are the compile-time conditionals that reveal various Glk optional
     modules. */
+#define GLK_MODULE_LINE_ECHO
+#define GLK_MODULE_LINE_TERMINATORS
 #define GLK_MODULE_UNICODE
 #define GLK_MODULE_UNICODE_NORM
 #define GLK_MODULE_IMAGE
@@ -58,6 +60,9 @@ typedef struct glk_schannel_struct *schanid_t;
 #define gestalt_GraphicsTransparency (14)
 #define gestalt_Unicode (15)
 #define gestalt_UnicodeNorm (16)
+#define gestalt_LineInputEcho (17)
+#define gestalt_LineTerminators (18)
+#define gestalt_LineTerminatorKey (19)
 
 #define evtype_None (0)
 #define evtype_Timer (1)
@@ -137,6 +142,10 @@ typedef struct stream_result_struct {
 #define winmethod_Fixed (0x10)
 #define winmethod_Proportional (0x20)
 #define winmethod_DivisionMask (0xf0)
+
+#define winmethod_Border   (0x000)
+#define winmethod_NoBorder (0x100)
+#define winmethod_BorderMask (0x100)
 
 #define fileusage_Data (0x00)
 #define fileusage_SavedGame (0x01)
@@ -269,6 +278,15 @@ extern void glk_request_mouse_event(winid_t win);
 extern void glk_cancel_line_event(winid_t win, event_t *event);
 extern void glk_cancel_char_event(winid_t win);
 extern void glk_cancel_mouse_event(winid_t win);
+
+#ifdef GLK_MODULE_LINE_ECHO
+extern void glk_set_echo_line_event(winid_t win, glui32 val);
+#endif /* GLK_MODULE_LINE_ECHO */
+
+#ifdef GLK_MODULE_LINE_TERMINATORS
+extern void glk_set_terminators_line_event(winid_t win, glui32 *keycodes, 
+    glui32 count);
+#endif /* GLK_MODULE_LINE_TERMINATORS */
 
 #ifdef GLK_MODULE_UNICODE
 
