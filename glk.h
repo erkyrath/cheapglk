@@ -1,7 +1,7 @@
 #ifndef GLK_H
 #define GLK_H
 
-/* glk.h: Header file for Glk API, version 0.7.###.
+/* glk.h: Header file for Glk API, version 0.7.1.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://eblong.com/zarf/glk/
 
