@@ -289,12 +289,9 @@ static glui32 combining_class(glui32 ch)
     RETURN_COMBINING_CLASS(ch);
 }
 
-/* This returns a new buffer (possibly longer). The caller must free
-   it. The original buffer is unchanged.
-
-   (It would be possible to do this in place, in simple cases. But
-   the canon_normalize function has to call this and then deal with
-   recomposing. It's easier to always allocate a new buffer.)
+/* This returns a new buffer (possibly longer), containing the decomposed
+   form of the original buffer. The caller must free the returned buffer.
+   The original buffer is unchanged.
 */
 static glui32 *gli_buffer_canon_decompose_uni(glui32 *buf, 
     glui32 *numcharsref)
@@ -411,42 +408,61 @@ static glui32 check_composition(glui32 ch1, glui32 ch2)
     RETURN_COMPOSITION(ch1, ch2);
 }
 
-/* This copies from buf to dest, composing characters where possible.
-   The destination is limited to len characters. The returned number
-   of characters may be more than len, but will not be more than
-   numchars.
+/* This composes characters in the given buffer, in place. It returns the
+   number of characters in the result, which will be less than or equal
+   to len.
 */
-static glui32 gli_buffer_canon_compose_uni(glui32 *buf, glui32 *dest, 
-    glui32 len, glui32 numchars)
+static glui32 gli_buffer_canon_compose_uni(glui32 *buf, glui32 len)
 {
-    glui32 curch, nextch, pos, res, destlen;
+    /* This algorithm is lifted from the Java sample code at
+       <http://www.unicode.org/reports/tr15/Normalizer.html>.
+       I apologize for the ugly.
 
-    if (numchars == 0)
+       Roughly, pos is the position of the last base character;
+       curch is that character in progress; ix is the next character
+       to write (which may fly ahead of pos, as we encounter a string of
+       combining chars); and jx is the position that we're scanning.
+       In the simplest case, jx and ix stay together, with pos one behind. */
+
+    glui32 curch, newch, curclass, newclass, res;
+    glui32 ix, jx, pos;
+
+    if (len == 0)
         return 0;
 
+    pos = 0;
     curch = buf[0];
-    pos = 1;
-    destlen = 0;
+    curclass = combining_class(curch);
+    if (curclass)
+        curclass = 999; /* just in case the first character is a combiner */
+    ix = 1;
+    jx = ix;
     while (1) {
-        if (pos >= numchars) {
-            if (destlen < len)
-                dest[destlen] = curch;
-            destlen++;
+        if (jx >= len) {
+            buf[pos] = curch;
+            pos = ix;
             break;
         }
-        nextch = buf[pos++];
-        res = check_composition(curch, nextch);
-        if (!res) {
-            if (destlen < len)
-                dest[destlen] = curch;
-            destlen++;
-            curch = nextch;
-            continue;
+        newch = buf[jx];
+        newclass = combining_class(newch);
+        res = check_composition(curch, newch);
+        if (res && (!curclass || curclass < newclass)) {
+            curch = res;
+            buf[pos] = curch;
         }
-        curch = res;
+        else {
+            if (!newclass) {
+                pos = ix;
+                curch = newch;
+            }
+            curclass = newclass;
+            buf[ix] = newch;
+            ix++;
+        }
+        jx++;
     }
 
-    return destlen;
+    return pos;
 }
 
 glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
@@ -472,15 +488,22 @@ glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
 glui32 glk_buffer_canon_normalize_uni(glui32 *buf, glui32 len,
     glui32 numchars)
 {
+    glui32 newlen;
     glui32 *dest = gli_buffer_canon_decompose_uni(buf, &numchars);
 
     if (!dest)
         return 0;
 
-    /* Now compose back to the original buffer. */
-    numchars = gli_buffer_canon_compose_uni(dest, buf, len, numchars);
+    numchars = gli_buffer_canon_compose_uni(dest, numchars);
 
+    /* Copy the data back. */
+    newlen = numchars;
+    if (newlen > len)
+        newlen = len;
+    if (newlen)
+        memcpy(buf, dest, newlen * sizeof(glui32));
     free(dest);
+
     return numchars;
 }
 
