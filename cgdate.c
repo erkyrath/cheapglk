@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <strings.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include "glk.h"
@@ -14,7 +15,7 @@
 static void gli_date_from_tm(glkdate_t *date, struct tm *tm)
 {
     date->year = 1900 + tm->tm_year;
-    date->month = tm->tm_mon;
+    date->month = 1 + tm->tm_mon;
     date->day = tm->tm_mday;
     date->weekday = tm->tm_wday;
     date->hour = tm->tm_hour;
@@ -22,6 +23,38 @@ static void gli_date_from_tm(glkdate_t *date, struct tm *tm)
     date->second = tm->tm_sec;
 }
 
+static void gli_date_to_tm(glkdate_t *date, struct tm *tm)
+{
+    bzero(tm, sizeof(tm));
+    tm->tm_year = date->year - 1900;
+    tm->tm_mon = date->month - 1;
+    tm->tm_mday = date->day;
+    tm->tm_wday = date->weekday;
+    tm->tm_hour = date->hour;
+    tm->tm_min = date->minute;
+    tm->tm_sec = date->second;
+}
+
+static void gli_timestamp_to_time(time_t timestamp, glktimeval_t *time)
+{
+    if (sizeof(timestamp) <= 4) {
+        /* This platform has 32-bit time, but we can't do anything
+           about that. Hope it's not 2038 yet. */
+        if (timestamp >= 0)
+            time->high_sec = 0;
+        else
+            time->high_sec = -1;
+        time->low_sec = timestamp;
+    }
+    else {
+        /* The cast to int64_t shouldn't be necessary, but it
+           suppresses a pointless warning in the 32-bit case.
+           (Remember that we won't be executing this line in the
+           32-bit case.) */
+        time->high_sec = (((int64_t)timestamp) >> 32) & 0xFFFFFFFF;
+        time->low_sec = timestamp & 0xFFFFFFFF;
+    }
+}
 
 void glk_current_time(glktimeval_t *time)
 {
@@ -33,21 +66,7 @@ void glk_current_time(glktimeval_t *time)
         return;
     }
 
-    if (sizeof(tv.tv_sec) <= 4) {
-        /* This platform has 32-bit time, but we can't do anything
-           about that. Hope it's not 2038 yet. */
-        time->high_sec = 0;
-        time->low_sec = tv.tv_sec;
-    }
-    else {
-        /* The cast to int64_t shouldn't be necessary, but it
-           suppresses a pointless warning in the 32-bit case.
-           (Remember that we won't be executing this line in the
-           32-bit case.) */
-        time->high_sec = (((int64_t)tv.tv_sec) >> 32) & 0xFFFFFFFF;
-        time->low_sec = tv.tv_sec & 0xFFFFFFFF;
-    }
-
+    gli_timestamp_to_time(tv.tv_sec, time);
     time->microsec = tv.tv_usec;
 }
 
@@ -126,10 +145,29 @@ void glk_simple_time_to_date_local(glsi32 time, glui32 factor,
 
 void glk_date_to_time_utc(glkdate_t *date, glktimeval_t *time)
 {
+    time_t timestamp;
+    struct tm tm;
+
+    gli_date_to_tm(date, &tm);
+    /* The timegm function is not standard POSIX. If it's not available
+       on your platform, try setting the env var "TZ" to "", calling
+       mktime(), and then resetting "TZ". */
+    timestamp = timegm(&tm);
+
+    gli_timestamp_to_time(timestamp, time);
+    time->microsec = 0;
 }
 
 void glk_date_to_time_local(glkdate_t *date, glktimeval_t *time)
 {
+    time_t timestamp;
+    struct tm tm;
+
+    gli_date_to_tm(date, &tm);
+    timestamp = mktime(&tm);
+
+    gli_timestamp_to_time(timestamp, time);
+    time->microsec = 0;
 }
 
 glsi32 glk_date_to_simple_time_utc(glkdate_t *date, glui32 factor)
