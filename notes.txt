@@ -166,6 +166,7 @@ key as meta key" preference.)
 * Version History
 
 1.0.###:
+    Added the date-time functions (Glk 0.7.2).
     Fixed a bug in Unicode normalization (thanks David Fletcher).
 
 1.0.0:
