@@ -56,6 +56,18 @@ static void gli_timestamp_to_time(time_t timestamp, glktimeval_t *time)
     }
 }
 
+static glsi32 gli_simplify_time(time_t timestamp, glui32 factor)
+{
+    /* We want to round towards negative infinity, which takes a little
+       bit of fussing. */
+    if (timestamp >= 0) {
+        return timestamp / (time_t)factor;
+    }
+    else {
+        return -1 - (((time_t)-1 - timestamp) / (time_t)factor);
+    }
+}
+
 void glk_current_time(glktimeval_t *time)
 {
     struct timeval tv;
@@ -84,7 +96,7 @@ glsi32 glk_current_simple_time(glui32 factor)
         return 0;
     }
 
-    return tv.tv_sec / factor;
+    return gli_simplify_time(tv.tv_sec, factor);
 }
 
 void glk_time_to_date_utc(glktimeval_t *time, glkdate_t *date)
@@ -155,7 +167,7 @@ void glk_date_to_time_utc(glkdate_t *date, glktimeval_t *time)
     timestamp = timegm(&tm);
 
     gli_timestamp_to_time(timestamp, time);
-    time->microsec = 0;
+    time->microsec = date->microsec;
 }
 
 void glk_date_to_time_local(glkdate_t *date, glktimeval_t *time)
@@ -167,17 +179,42 @@ void glk_date_to_time_local(glkdate_t *date, glktimeval_t *time)
     timestamp = mktime(&tm);
 
     gli_timestamp_to_time(timestamp, time);
-    time->microsec = 0;
+    time->microsec = date->microsec;
 }
 
 glsi32 glk_date_to_simple_time_utc(glkdate_t *date, glui32 factor)
 {
-    return 0;
+    time_t timestamp;
+    struct tm tm;
+
+    if (factor == 0) {
+        gli_strict_warning("date_to_simple_time_utc: factor cannot be zero.");
+        return 0;
+    }
+
+    gli_date_to_tm(date, &tm);
+    /* The timegm function is not standard POSIX. If it's not available
+       on your platform, try setting the env var "TZ" to "", calling
+       mktime(), and then resetting "TZ". */
+    timestamp = timegm(&tm);
+
+    return gli_simplify_time(timestamp, factor);
 }
 
 glsi32 glk_date_to_simple_time_local(glkdate_t *date, glui32 factor)
 {
-    return 0;
+    time_t timestamp;
+    struct tm tm;
+
+    if (factor == 0) {
+        gli_strict_warning("date_to_simple_time_local: factor cannot be zero.");
+        return 0;
+    }
+
+    gli_date_to_tm(date, &tm);
+    timestamp = mktime(&tm);
+
+    return gli_simplify_time(timestamp, factor);
 }
 
 
