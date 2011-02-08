@@ -201,6 +201,7 @@ void glk_date_to_time_local(glkdate_t *date, glktimeval_t *time)
     glsi32 microsec;
 
     microsec = gli_date_to_tm(date, &tm);
+    tm.tm_isdst = -1;
     timestamp = mktime(&tm);
 
     gli_timestamp_to_time(timestamp, microsec, time);
@@ -236,6 +237,7 @@ glsi32 glk_date_to_simple_time_local(glkdate_t *date, glui32 factor)
     }
 
     gli_date_to_tm(date, &tm);
+    tm.tm_isdst = -1;
     timestamp = mktime(&tm);
 
     return gli_simplify_time(timestamp, factor);
