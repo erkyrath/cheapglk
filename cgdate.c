@@ -7,11 +7,7 @@
 
 #ifdef GLK_MODULE_DATETIME
 
-#define gli_timeval_clear(timep)  \
-    ((timep)->high_sec = 0,  \
-    (timep)->low_sec = 0,  \
-    (timep)->microsec = 0)
-
+/* Copy a POSIX tm structure to a glkdate. */
 static void gli_date_from_tm(glkdate_t *date, struct tm *tm)
 {
     date->year = 1900 + tm->tm_year;
@@ -23,8 +19,17 @@ static void gli_date_from_tm(glkdate_t *date, struct tm *tm)
     date->second = tm->tm_sec;
 }
 
-static void gli_date_to_tm(glkdate_t *date, struct tm *tm)
+/* Copy a glkdate to a POSIX tm structure. 
+   This is used in the "glk_date_to_..." functions, which are supposed
+   to normalize the glkdate. We're going to rely on the mktime() / 
+   timegm() functions to do that -- except they don't handle microseconds.
+   So we'll have to do that normalization here, adjust the tm_sec value,
+   and return the normalized number of microseconds.
+*/
+static glsi32 gli_date_to_tm(glkdate_t *date, struct tm *tm)
 {
+    glsi32 microsec;
+
     bzero(tm, sizeof(tm));
     tm->tm_year = date->year - 1900;
     tm->tm_mon = date->month - 1;
@@ -33,9 +38,26 @@ static void gli_date_to_tm(glkdate_t *date, struct tm *tm)
     tm->tm_hour = date->hour;
     tm->tm_min = date->minute;
     tm->tm_sec = date->second;
+    microsec = date->microsec;
+
+    if (microsec >= 1000000) {
+        tm->tm_sec += (microsec / 1000000);
+        microsec = microsec % 1000000;
+    }
+    else if (microsec < 0) {
+        microsec = -1 - microsec;
+        tm->tm_sec -= (1 + microsec / 1000000);
+        microsec = 999999 - (microsec % 1000000);
+    }
+
+    return microsec;
 }
 
-static void gli_timestamp_to_time(time_t timestamp, glktimeval_t *time)
+/* Convert a Unix timestamp, along with a microseconds value, to
+   a glktimeval. 
+*/
+static void gli_timestamp_to_time(time_t timestamp, glsi32 microsec, 
+    glktimeval_t *time)
 {
     if (sizeof(timestamp) <= 4) {
         /* This platform has 32-bit time, but we can't do anything
@@ -54,8 +76,11 @@ static void gli_timestamp_to_time(time_t timestamp, glktimeval_t *time)
         time->high_sec = (((int64_t)timestamp) >> 32) & 0xFFFFFFFF;
         time->low_sec = timestamp & 0xFFFFFFFF;
     }
+
+    time->microsec = microsec;
 }
 
+/* Divide a Unix timestamp by a (positive) value. */
 static glsi32 gli_simplify_time(time_t timestamp, glui32 factor)
 {
     /* We want to round towards negative infinity, which takes a little
@@ -73,13 +98,12 @@ void glk_current_time(glktimeval_t *time)
     struct timeval tv;
 
     if (gettimeofday(&tv, NULL)) {
-        gli_timeval_clear(time);
+        gli_timestamp_to_time(0, 0, time);
         gli_strict_warning("current_time: gettimeofday() failed.");
         return;
     }
 
-    gli_timestamp_to_time(tv.tv_sec, time);
-    time->microsec = tv.tv_usec;
+    gli_timestamp_to_time(tv.tv_sec, tv.tv_usec, time);
 }
 
 glsi32 glk_current_simple_time(glui32 factor)
@@ -159,27 +183,27 @@ void glk_date_to_time_utc(glkdate_t *date, glktimeval_t *time)
 {
     time_t timestamp;
     struct tm tm;
+    glsi32 microsec;
 
-    gli_date_to_tm(date, &tm);
+    microsec = gli_date_to_tm(date, &tm);
     /* The timegm function is not standard POSIX. If it's not available
        on your platform, try setting the env var "TZ" to "", calling
        mktime(), and then resetting "TZ". */
     timestamp = timegm(&tm);
 
-    gli_timestamp_to_time(timestamp, time);
-    time->microsec = date->microsec;
+    gli_timestamp_to_time(timestamp, microsec, time);
 }
 
 void glk_date_to_time_local(glkdate_t *date, glktimeval_t *time)
 {
     time_t timestamp;
     struct tm tm;
+    glsi32 microsec;
 
-    gli_date_to_tm(date, &tm);
+    microsec = gli_date_to_tm(date, &tm);
     timestamp = mktime(&tm);
 
-    gli_timestamp_to_time(timestamp, time);
-    time->microsec = date->microsec;
+    gli_timestamp_to_time(timestamp, microsec, time);
 }
 
 glsi32 glk_date_to_simple_time_utc(glkdate_t *date, glui32 factor)
@@ -216,7 +240,6 @@ glsi32 glk_date_to_simple_time_local(glkdate_t *date, glui32 factor)
 
     return gli_simplify_time(timestamp, factor);
 }
-
 
 
 #endif /* GLK_MODULE_DATETIME */
