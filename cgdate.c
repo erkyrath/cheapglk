@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <strings.h>
 #include <stdlib.h>
+#include <time.h>
 #include <sys/time.h>
 #include "glk.h"
 #include "cheapglk.h"
