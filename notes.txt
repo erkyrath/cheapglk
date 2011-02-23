@@ -165,6 +165,9 @@ key as meta key" preference.)
 
 * Version History
 
+1.0.###:
+    Added Windows patches for the date-time code.
+
 1.0.1:
     Added the date-time functions (Glk 0.7.2).
     Fixed bugs in Unicode normalization and case-changing (thanks David 
