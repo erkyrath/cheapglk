@@ -167,6 +167,8 @@ key as meta key" preference.)
 
 1.0.###:
     Added Windows patches for the date-time code.
+    Fixed a bug with reading and writing to the same file without a
+    reposition operation in between.
 
 1.0.1:
     Added the date-time functions (Glk 0.7.2).
