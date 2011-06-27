@@ -24,7 +24,8 @@ typedef uint32_t glui32;
 typedef int32_t glsi32;
 
 /* These are the compile-time conditionals that reveal various Glk optional
-    modules. */
+    modules. Note that if GLK_MODULE_SOUND2 is defined, GLK_MODULE_SOUND
+    must be also. */
 #define GLK_MODULE_LINE_ECHO
 #define GLK_MODULE_LINE_TERMINATORS
 #define GLK_MODULE_UNICODE
