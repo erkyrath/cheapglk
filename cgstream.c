@@ -1063,6 +1063,7 @@ static glui32 gli_get_line(stream_t *str, char *cbuf, glui32 *ubuf,
                         ubuf[lx] = ch;
                         gotnewline = (ch == '\n');
                     }
+                    ubuf[lx] = '\0';
                     return lx;
                 }
             }
