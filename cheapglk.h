@@ -77,6 +77,7 @@ struct glk_window_struct {
 #define strtype_File (1)
 #define strtype_Window (2)
 #define strtype_Memory (3)
+#define strtype_Resource (4)
 
 struct glk_stream_struct {
     glui32 magicnum;
@@ -95,8 +96,8 @@ struct glk_stream_struct {
     FILE *file;
     glui32 lastop; /* 0, filemode_Write, or filemode_Read */
     
-    /* for strtype_Memory. Separate pointers for one-byte and four-byte
-       streams */
+    /* for strtype_Memory and strtype_Resource. Separate pointers for 
+       one-byte and four-byte streams */
     unsigned char *buf;
     unsigned char *bufptr;
     unsigned char *bufend;
