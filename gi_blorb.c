@@ -1,5 +1,5 @@
 /* gi_blorb.c: Blorb library layer for Glk API.
-    gi_blorb version 1.4.
+    gi_blorb version 1.5.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://eblong.com/zarf/glk/
 

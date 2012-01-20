@@ -2,11 +2,11 @@
 #define _GI_BLORB_H
 
 /* gi_blorb.h: Blorb library layer for Glk API.
-    gi_blorb version 1.4.
+    gi_blorb version 1.5.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://eblong.com/zarf/glk/
 
-    This file is copyright 1998-2010 by Andrew Plotkin. You may copy,
+    This file is copyright 1998-2012 by Andrew Plotkin. You may copy,
     distribute, and incorporate it into your own programs, by any means
     and under any conditions, as long as you do not modify it. You may
     also modify this file, incorporate it into your own programs,
@@ -35,9 +35,10 @@ typedef glui32 giblorb_err_t;
 #define giblorb_make_id(c1, c2, c3, c4)  \
     (((c1) << 24) | ((c2) << 16) | ((c3) << 8) | (c4))
 
-#define giblorb_ID_Snd       (giblorb_make_id('S', 'n', 'd', ' '))
 #define giblorb_ID_Exec      (giblorb_make_id('E', 'x', 'e', 'c'))
+#define giblorb_ID_Snd       (giblorb_make_id('S', 'n', 'd', ' '))
 #define giblorb_ID_Pict      (giblorb_make_id('P', 'i', 'c', 't'))
+#define giblorb_ID_Data      (giblorb_make_id('D', 'a', 't', 'a'))
 #define giblorb_ID_Copyright (giblorb_make_id('(', 'c', ')', ' '))
 #define giblorb_ID_AUTH      (giblorb_make_id('A', 'U', 'T', 'H'))
 #define giblorb_ID_ANNO      (giblorb_make_id('A', 'N', 'N', 'O'))
