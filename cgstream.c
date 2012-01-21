@@ -92,6 +92,9 @@ void gli_delete_stream(stream_t *str)
                     str->arrayrock);
             }
             break;
+        case strtype_Resource: 
+            /* nothing necessary; the array belongs to gi_blorb.c. */
+            break;
         case strtype_File:
             /* close the FILE */
             fclose(str->file);
@@ -315,6 +318,86 @@ strid_t glk_stream_open_file_uni(fileref_t *fref, glui32 fmode,
 
 #endif /* GLK_MODULE_UNICODE */
 
+#ifdef GLK_MODULE_RESOURCE_STREAM
+
+strid_t glk_stream_open_resource(glui32 filenum, glui32 rock)
+{
+    strid_t str;
+    giblorb_err_t err;
+    giblorb_result_t res;
+    giblorb_map_t *map = giblorb_get_resource_map();
+    if (!map)
+        return 0; /* Not running from a blorb file */
+
+    err = giblorb_load_resource(map, giblorb_method_Memory, &res, giblorb_ID_Data, filenum);
+    if (err)
+        return 0; /* Not found, or some other error */
+
+    /* We'll use the in-memory copy of the chunk data as the basis for
+       our new stream. It's important to not call chunk_unload() until
+       the stream is closed (and we won't). 
+
+       This will be memory-hoggish for giant data chunks, but I don't
+       expect giant data chunks at this point. A more efficient model
+       would be to use the file on disk, but this requires some hacking
+       into the file stream code (we'd need to open a new FILE*) and
+       I don't feel like doing that. */
+
+    str = gli_new_stream(strtype_Resource,
+        TRUE, FALSE, rock);
+    if (!str) {
+        gli_strict_warning("stream_open_resource: unable to create stream.");
+        return NULL;
+    }
+    
+    if (res.data.ptr && res.length) {
+        str->buf = (unsigned char *)res.data.ptr;
+        str->bufptr = (unsigned char *)res.data.ptr;
+        str->buflen = res.length;
+        str->bufend = str->buf + str->buflen;
+        str->bufeof = str->bufend;
+    }
+    
+    return str;
+}
+
+strid_t glk_stream_open_resource_uni(glui32 filenum, glui32 rock)
+{
+    strid_t str;
+    giblorb_err_t err;
+    giblorb_result_t res;
+    giblorb_map_t *map = giblorb_get_resource_map();
+    if (!map)
+        return 0; /* Not running from a blorb file */
+
+    err = giblorb_load_resource(map, giblorb_method_Memory, &res, giblorb_ID_Data, filenum);
+    if (err)
+        return 0; /* Not found, or some other error */
+
+    str = gli_new_stream(strtype_Memory, 
+        TRUE, FALSE, rock);
+    if (!str) {
+        gli_strict_warning("stream_open_resource_uni: unable to create stream.");
+        return NULL;
+    }
+    
+    str->unicode = TRUE;
+
+    /* ### will not work right for text-mode! */
+
+    if (res.data.ptr && res.length) {
+        str->ubuf = (glui32 *)res.data.ptr;
+        str->ubufptr = (glui32 *)res.data.ptr;
+        str->buflen = res.length;
+        str->ubufend = str->ubuf + str->buflen;
+        str->ubufeof = str->ubufend;
+    }
+    
+    return str;
+}
+
+#endif /* GLK_MODULE_RESOURCE_STREAM */
+
 strid_t gli_stream_open_pathname(char *pathname, int writemode, 
     int textmode, glui32 rock)
 {
@@ -404,6 +487,7 @@ void glk_stream_set_position(stream_t *str, glsi32 pos, glui32 seekmode)
 
     switch (str->type) {
         case strtype_Memory: 
+        case strtype_Resource: 
             if (!str->unicode) {
                 if (seekmode == seekmode_Current) {
                     pos = (str->bufptr - str->buf) + pos;
@@ -463,6 +547,7 @@ glui32 glk_stream_get_position(stream_t *str)
 
     switch (str->type) {
         case strtype_Memory: 
+        case strtype_Resource: 
             if (!str->unicode) {
                 return (str->bufptr - str->buf);
             }
@@ -548,6 +633,9 @@ static void gli_put_char(stream_t *str, unsigned char ch)
                 putc(ch, str->file);
             }
             break;
+        case strtype_Resource:
+            /* resource streams are never writable */
+            break;
     }
 }
 
@@ -610,6 +698,9 @@ static void gli_put_char_uni(stream_t *str, glui32 ch)
                 putc(((ch >>  8) & 0xFF), str->file);
                 putc( (ch        & 0xFF), str->file);
             }
+            break;
+        case strtype_Resource:
+            /* resource streams are never writable */
             break;
     }
 }
@@ -703,6 +794,9 @@ static void gli_put_buffer(stream_t *str, char *buf, glui32 len)
                     putc( (ch        & 0xFF), str->file);
                 }
             }
+            break;
+        case strtype_Resource:
+            /* resource streams are never writable */
             break;
     }
 }
@@ -1296,84 +1390,4 @@ glui32 glk_get_buffer_stream(stream_t *str, char *buf, glui32 len)
     }
     return gli_get_buffer(str, buf, NULL, len);
 }
-
-#ifdef GLK_MODULE_RESOURCE_STREAM
-
-strid_t glk_stream_open_resource(glui32 filenum, glui32 rock)
-{
-    strid_t str;
-    giblorb_err_t err;
-    giblorb_result_t res;
-    giblorb_map_t *map = giblorb_get_resource_map();
-    if (!map)
-        return 0; /* Not running from a blorb file */
-
-    err = giblorb_load_resource(map, giblorb_method_Memory, &res, giblorb_ID_Data, filenum);
-    if (err)
-        return 0; /* Not found, or some other error */
-
-    /* We'll use the in-memory copy of the chunk data as the basis for
-       our new stream. It's important to not call chunk_unload() until
-       the stream is closed (and we won't). 
-
-       This will be memory-hoggish for giant data chunks, but I don't
-       expect giant data chunks at this point. A more efficient model
-       would be to use the file on disk, but this requires some hacking
-       into the file stream code (we'd need to open a new FILE*) and
-       I don't feel like doing that. */
-
-    str = gli_new_stream(strtype_Resource,
-        TRUE, FALSE, rock);
-    if (!str) {
-        gli_strict_warning("stream_open_resource: unable to create stream.");
-        return NULL;
-    }
-    
-    if (res.data.ptr && res.length) {
-        str->buf = (unsigned char *)res.data.ptr;
-        str->bufptr = (unsigned char *)res.data.ptr;
-        str->buflen = res.length;
-        str->bufend = str->buf + str->buflen;
-        str->bufeof = str->bufend;
-    }
-    
-    return str;
-}
-
-strid_t glk_stream_open_resource_uni(glui32 filenum, glui32 rock)
-{
-    strid_t str;
-    giblorb_err_t err;
-    giblorb_result_t res;
-    giblorb_map_t *map = giblorb_get_resource_map();
-    if (!map)
-        return 0; /* Not running from a blorb file */
-
-    err = giblorb_load_resource(map, giblorb_method_Memory, &res, giblorb_ID_Data, filenum);
-    if (err)
-        return 0; /* Not found, or some other error */
-
-    str = gli_new_stream(strtype_Memory, 
-        TRUE, FALSE, rock);
-    if (!str) {
-        gli_strict_warning("stream_open_resource_uni: unable to create stream.");
-        return NULL;
-    }
-    
-    str->unicode = TRUE;
-
-    /* ### will not work right for text-mode! */
-
-    if (res.data.ptr && res.length) {
-        str->ubuf = (glui32 *)res.data.ptr;
-        str->ubufptr = (glui32 *)res.data.ptr;
-        str->buflen = res.length;
-        str->ubufend = str->ubuf + str->buflen;
-        str->ubufeof = str->ubufend;
-    }
-    
-    return str;
-}
-
-#endif /* GLK_MODULE_RESOURCE_STREAM */
 
