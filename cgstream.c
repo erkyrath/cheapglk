@@ -374,7 +374,7 @@ strid_t glk_stream_open_resource_uni(glui32 filenum, glui32 rock)
     if (err)
         return 0; /* Not found, or some other error */
 
-    str = gli_new_stream(strtype_Memory, 
+    str = gli_new_stream(strtype_Resource, 
         TRUE, FALSE, rock);
     if (!str) {
         gli_strict_warning("stream_open_resource_uni: unable to create stream.");
@@ -838,6 +838,7 @@ static glsi32 gli_get_char(stream_t *str, int want_unicode)
     
     switch (str->type) {
         case strtype_Memory:
+        case strtype_Resource:
             if (!str->unicode) {
                 if (str->bufptr < str->bufend) {
                     unsigned char ch;
@@ -916,6 +917,7 @@ static glui32 gli_get_buffer(stream_t *str, char *cbuf, glui32 *ubuf,
     
     switch (str->type) {
         case strtype_Memory:
+        case strtype_Resource:
             if (!str->unicode) {
                 if (str->bufptr >= str->bufend) {
                     len = 0;
@@ -1055,6 +1057,7 @@ static glui32 gli_get_line(stream_t *str, char *cbuf, glui32 *ubuf,
     
     switch (str->type) {
         case strtype_Memory:
+        case strtype_Resource:
             if (len == 0)
                 return 0;
             len -= 1; /* for the terminal null */
