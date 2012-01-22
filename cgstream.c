@@ -383,14 +383,18 @@ strid_t glk_stream_open_resource_uni(glui32 filenum, glui32 rock)
     
     str->unicode = TRUE;
 
-    /* ### will not work right for text-mode! */
+    /* We have been handed an array of bytes. (They're big-endian
+       four-byte chunks, or perhaps a UTF-8 byte sequence, rather than
+       native-endian four-byte integers). So we drop it into buf,
+       rather than ubuf -- we'll have to do the translation in the
+       get() functions. */
 
     if (res.data.ptr && res.length) {
-        str->ubuf = (glui32 *)res.data.ptr;
-        str->ubufptr = (glui32 *)res.data.ptr;
+        str->buf = (unsigned char *)res.data.ptr;
+        str->bufptr = (unsigned char *)res.data.ptr;
         str->buflen = res.length;
-        str->ubufend = str->ubuf + str->buflen;
-        str->ubufeof = str->ubufend;
+        str->bufend = str->buf + str->buflen;
+        str->bufeof = str->bufend;
     }
     
     return str;
@@ -837,8 +841,35 @@ static glsi32 gli_get_char(stream_t *str, int want_unicode)
         return -1;
     
     switch (str->type) {
-        case strtype_Memory:
         case strtype_Resource:
+            if (str->unicode) {
+                if (1) { /*###binary*/
+                    /* cheap big-endian stream */
+                    glui32 ch;
+                    if (str->bufptr >= str->bufend)
+                        return -1;
+                    ch = *(str->bufptr);
+                    str->bufptr++;
+                    if (str->bufptr >= str->bufend)
+                        return -1;
+                    ch = (ch << 8) | (*(str->bufptr) & 0xFF);
+                    str->bufptr++;
+                    if (str->bufptr >= str->bufend)
+                        return -1;
+                    ch = (ch << 8) | (*(str->bufptr) & 0xFF);
+                    str->bufptr++;
+                    if (str->bufptr >= str->bufend)
+                        return -1;
+                    ch = (ch << 8) | (*(str->bufptr) & 0xFF);
+                    str->bufptr++;
+                    str->readcount++;
+                    if (!want_unicode && ch >= 0x100)
+                        return '?';
+                    return (glsi32)ch;
+                }
+            }
+            /* for text streams, fall through to memory case */
+        case strtype_Memory:
             if (!str->unicode) {
                 if (str->bufptr < str->bufend) {
                     unsigned char ch;
@@ -916,8 +947,46 @@ static glui32 gli_get_buffer(stream_t *str, char *cbuf, glui32 *ubuf,
         return 0;
     
     switch (str->type) {
-        case strtype_Memory:
         case strtype_Resource:
+            if (str->unicode) {
+                glui32 count = 0;
+                while (count < len) {
+                    glui32 ch;
+                    if (1) { /*###binary*/
+                        /* cheap big-endian stream */
+                        if (str->bufptr >= str->bufend)
+                            break;
+                        ch = *(str->bufptr);
+                        str->bufptr++;
+                        if (str->bufptr >= str->bufend)
+                            break;
+                        ch = (ch << 8) | (*(str->bufptr) & 0xFF);
+                        str->bufptr++;
+                        if (str->bufptr >= str->bufend)
+                            break;
+                        ch = (ch << 8) | (*(str->bufptr) & 0xFF);
+                        str->bufptr++;
+                        if (str->bufptr >= str->bufend)
+                            break;
+                        ch = (ch << 8) | (*(str->bufptr) & 0xFF);
+                        str->bufptr++;
+                    }
+                    if (cbuf) {
+                        if (ch >= 0x100)
+                            cbuf[count] = '?';
+                        else
+                            cbuf[count] = ch;
+                    }
+                    else {
+                        ubuf[count] = ch;
+                    }
+                    count++;
+                }
+                str->readcount += count;
+                return count;
+            }
+            /* for text streams, fall through to memory case */
+        case strtype_Memory:
             if (!str->unicode) {
                 if (str->bufptr >= str->bufend) {
                     len = 0;
@@ -1056,8 +1125,55 @@ static glui32 gli_get_line(stream_t *str, char *cbuf, glui32 *ubuf,
         return 0;
     
     switch (str->type) {
-        case strtype_Memory:
         case strtype_Resource:
+            if (len == 0)
+                return 0;
+            len -= 1; /* for the terminal null */
+            if (str->unicode) {
+                glui32 count = 0;
+                while (count < len) {
+                    glui32 ch;
+                    if (1) { /*###binary*/
+                        /* cheap big-endian stream */
+                        if (str->bufptr >= str->bufend)
+                            break;
+                        ch = *(str->bufptr);
+                        str->bufptr++;
+                        if (str->bufptr >= str->bufend)
+                            break;
+                        ch = (ch << 8) | (*(str->bufptr) & 0xFF);
+                        str->bufptr++;
+                        if (str->bufptr >= str->bufend)
+                            break;
+                        ch = (ch << 8) | (*(str->bufptr) & 0xFF);
+                        str->bufptr++;
+                        if (str->bufptr >= str->bufend)
+                            break;
+                        ch = (ch << 8) | (*(str->bufptr) & 0xFF);
+                        str->bufptr++;
+                    }
+                    if (cbuf) {
+                        if (ch >= 0x100)
+                            cbuf[count] = '?';
+                        else
+                            cbuf[count] = ch;
+                    }
+                    else {
+                        ubuf[count] = ch;
+                    }
+                    count++;
+                    if (ch == '\n')
+                        break;
+                }
+                if (cbuf)
+                    cbuf[count] = '\0';
+                else
+                    ubuf[count] = '\0';
+                str->readcount += count;
+                return count;
+            }
+            /* for text streams, fall through to memory case */
+        case strtype_Memory:
             if (len == 0)
                 return 0;
             len -= 1; /* for the terminal null */
