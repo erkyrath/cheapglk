@@ -512,7 +512,7 @@ void glk_stream_set_position(stream_t *str, glsi32 pos, glui32 seekmode)
     switch (str->type) {
         case strtype_Memory: 
         case strtype_Resource: 
-            if (!str->unicode) {
+            if (!str->unicode || str->type == strtype_Resource) {
                 if (seekmode == seekmode_Current) {
                     pos = (str->bufptr - str->buf) + pos;
                 }
@@ -572,7 +572,7 @@ glui32 glk_stream_get_position(stream_t *str)
     switch (str->type) {
         case strtype_Memory: 
         case strtype_Resource: 
-            if (!str->unicode) {
+            if (!str->unicode || str->type == strtype_Resource) {
                 return (str->bufptr - str->buf);
             }
             else {
