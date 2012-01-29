@@ -14,7 +14,9 @@
 /* Linked list of all filerefs */
 static fileref_t *gli_filereflist = NULL; 
 
-static char workingdir[256] = ".";
+#define BUFLEN (256)
+
+static char workingdir[BUFLEN] = ".";
 
 fileref_t *gli_new_fileref(char *filename, glui32 usage, glui32 rock)
 {
@@ -129,14 +131,14 @@ frefid_t glk_fileref_create_by_name(glui32 usage, char *name,
     glui32 rock)
 {
     fileref_t *fref;
-    char buf[256];
-    char buf2[256+256+1];
+    char buf[BUFLEN];
+    char buf2[BUFLEN+BUFLEN+1];
     int len;
     char *cx;
     
     len = strlen(name);
-    if (len > 255)
-        len = 255;
+    if (len > BUFLEN-1)
+        len = BUFLEN-1;
     
     /* Take out all '/' characters, and make sure the length is greater 
         than zero. Again, this is the right behavior in Unix. 
@@ -180,7 +182,7 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
     glui32 rock)
 {
     fileref_t *fref;
-    char buf[256], newbuf[256];
+    char buf[BUFLEN], newbuf[BUFLEN];
     char *res;
     char *cx;
     int val;
@@ -209,7 +211,7 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
     
     printf("%s %s: ", prompt, prompt2);
     
-    res = fgets(buf, 255, stdin);
+    res = fgets(buf, BUFLEN-1, stdin);
     if (!res) {
         printf("\n<end of input>\n");
         glk_exit();
