@@ -15,7 +15,6 @@
 static fileref_t *gli_filereflist = NULL; 
 
 #define BUFLEN (256)
-
 static char workingdir[BUFLEN] = ".";
 
 fileref_t *gli_new_fileref(char *filename, glui32 usage, glui32 rock)
@@ -132,42 +131,56 @@ frefid_t glk_fileref_create_by_name(glui32 usage, char *name,
 {
     fileref_t *fref;
     char buf[BUFLEN];
-    char buf2[BUFLEN+BUFLEN+1];
+    char buf2[2*BUFLEN+10];
     int len;
     char *cx;
+    char *suffix;
     
-    len = strlen(name);
-    if (len > BUFLEN-1)
-        len = BUFLEN-1;
-    
-    /* Take out all '/' characters, and make sure the length is greater 
-        than zero. Again, this is the right behavior in Unix. 
-        DOS/Windows might want to take out '\' instead, unless the
-        stdio library converts slashes for you. They'd also want to trim 
-        to 8 characters. Remember, the overall goal is to make a legal 
-        platform-native filename, without any extra directory 
-        components.
-       Suffixes are another sore point. Really, the game program 
-        shouldn't have a suffix on the name passed to this function. So
-        in DOS/Windows, this function should chop off dot-and-suffix,
-        if there is one, and then add a dot and a three-letter suffix
-        appropriate to the file type (as gleaned from the usage 
-        argument.)
+    /* The new spec recommendations: delete all characters in the
+       string "/\<>:|?*" (including quotes). Truncate at the first
+       period. Change to "null" if there's nothing left. Then append
+       an appropriate suffix: ".glkdata", ".glksave", ".txt".
     */
     
-    memcpy(buf, name, len);
-    if (len == 0) {
-        buf[0] = 'X';
-        len++;
+    for (cx=name, len=0; (*cx && *cx!='.' && len<BUFLEN-1); cx++) {
+        switch (*cx) {
+            case '"':
+            case '\\':
+            case '/':
+            case '>':
+            case '<':
+            case ':':
+            case '|':
+            case '?':
+            case '*':
+                break;
+            default:
+                buf[len++] = *cx;
+        }
     }
     buf[len] = '\0';
-    
-    for (cx=buf; *cx; cx++) {
-        if (*cx == '/')
-            *cx = '-';
+
+    if (len == 0) {
+        strcpy(buf, "null");
+        len = strlen(buf);
     }
     
-    sprintf(buf2, "%s/%s", workingdir, buf);
+    switch (usage & fileusage_TypeMask) {
+        case fileusage_Data:
+            suffix = ".glkdata";
+            break;
+        case fileusage_SavedGame:
+            suffix = ".glksave";
+            break;
+        case fileusage_Transcript:
+        case fileusage_InputRecord:
+            suffix = ".txt";
+            break;
+        default:
+            suffix = "";
+    }
+
+    sprintf(buf2, "%s/%s%s", workingdir, buf, suffix);
 
     fref = gli_new_fileref(buf2, usage, rock);
     if (!fref) {
