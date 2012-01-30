@@ -87,6 +87,21 @@ void glk_fileref_destroy(fileref_t *fref)
     gli_delete_fileref(fref);
 }
 
+static char *gli_suffix_for_usage(glui32 usage)
+{
+    switch (usage & fileusage_TypeMask) {
+        case fileusage_Data:
+            return ".glkdata";
+        case fileusage_SavedGame:
+            return ".glksave";
+        case fileusage_Transcript:
+        case fileusage_InputRecord:
+            return ".txt";
+        default:
+            return "";
+    }
+}
+
 frefid_t glk_fileref_create_temp(glui32 usage, glui32 rock)
 {
     char *filename;
@@ -165,21 +180,7 @@ frefid_t glk_fileref_create_by_name(glui32 usage, char *name,
         len = strlen(buf);
     }
     
-    switch (usage & fileusage_TypeMask) {
-        case fileusage_Data:
-            suffix = ".glkdata";
-            break;
-        case fileusage_SavedGame:
-            suffix = ".glksave";
-            break;
-        case fileusage_Transcript:
-        case fileusage_InputRecord:
-            suffix = ".txt";
-            break;
-        default:
-            suffix = "";
-    }
-
+    suffix = gli_suffix_for_usage(usage);
     sprintf(buf2, "%s/%s%s", workingdir, buf, suffix);
 
     fref = gli_new_fileref(buf2, usage, rock);
@@ -195,10 +196,11 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
     glui32 rock)
 {
     fileref_t *fref;
-    char buf[BUFLEN], newbuf[BUFLEN];
+    char buf[BUFLEN];
+    char newbuf[2*BUFLEN+10];
     char *res;
     char *cx;
-    int val;
+    int val, gotdot;
     char *prompt, *prompt2;
     
     switch (usage & fileusage_TypeMask) {
@@ -230,8 +232,9 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
         glk_exit();
     }
 
+    /* Trim whitespace from end and beginning. */
+
     val = strlen(buf);
-    
     while (val 
         && (buf[val-1] == '\n' 
             || buf[val-1] == '\r' 
@@ -247,12 +250,27 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
             default value, but this implementation is too cheap. */
         return NULL;
     }
-    
+
     if (cx[0] == '/')
         strcpy(newbuf, cx);
     else
         sprintf(newbuf, "%s/%s", workingdir, cx);
 
+    /* If there is no dot-suffix, add a standard one. */
+    val = strlen(newbuf);
+    gotdot = FALSE;
+    while (val && (buf[val-1] != '/')) {
+        if (buf[val-1] == '.') {
+            gotdot = TRUE;
+            break;
+        }
+        val--;
+    }
+    if (!gotdot) {
+        char *suffix = gli_suffix_for_usage(usage);
+        strcat(newbuf, suffix);
+    }
+    
     fref = gli_new_fileref(newbuf, usage, rock);
     if (!fref) {
         gli_strict_warning("fileref_create_by_prompt: unable to create fileref.");
