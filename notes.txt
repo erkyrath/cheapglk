@@ -165,6 +165,12 @@ key as meta key" preference.)
 
 * Version History
 
+1.0.3:
+    Added the Blorb-resource functions (Glk 0.7.4).
+    External filenames now follow the new spec recommendations: standard
+    filename suffixes, and removing more questionable characters in
+    fileref_create_by_name().
+
 1.0.2:
     Added Windows patches for the date-time code.
     Fixed a bug with reading and writing to the same file without a
