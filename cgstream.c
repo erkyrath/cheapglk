@@ -343,11 +343,16 @@ strid_t glk_stream_open_resource(glui32 filenum, glui32 rock)
        expect giant data chunks at this point. A more efficient model
        would be to use the file on disk, but this requires some hacking
        into the file stream code (we'd need to open a new FILE*) and
-       I don't feel like doing that. */
+       I don't feel like doing that.
+
+       Note that binary chunks are normally type BINA, but FORM
+       chunks also count as binary. (This allows us to embed AIFF
+       files as readable resources, for example.) */
 
     if (res.chunktype == giblorb_ID_TEXT)
         isbinary = FALSE;
-    else if (res.chunktype == giblorb_ID_BINA)
+    else if (res.chunktype == giblorb_ID_BINA
+        || res.chunktype == giblorb_make_id('F', 'O', 'R', 'M'))
         isbinary = TRUE;
     else
         return 0; /* Unknown chunk type */
