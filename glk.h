@@ -37,6 +37,17 @@ typedef int32_t glsi32;
 #define GLK_MODULE_DATETIME
 #define GLK_MODULE_RESOURCE_STREAM
 
+/* Define a macro for a function attribute that indicates a function that
+    never returns. (E.g., glk_exit().) We try to do this only in C compilers
+    that support it. If this is causing you problems, comment all this out
+    and simply "#define GLK_ATTRIBUTE_NORETURN". */
+#if defined(__GNUC__) || defined(__clang__)
+#define GLK_ATTRIBUTE_NORETURN __attribute__((__noreturn__))
+#endif // defined(__GNUC__) || defined(__clang__)
+#ifndef GLK_ATTRIBUTE_NORETURN
+#define GLK_ATTRIBUTE_NORETURN
+#endif // GLK_ATTRIBUTE_NORETURN
+
 /* These types are opaque object identifiers. They're pointers to opaque
     C structures, which are defined differently by each library. */
 typedef struct glk_window_struct  *winid_t;
@@ -194,7 +205,7 @@ typedef struct stream_result_struct {
     calls it. */
 extern void glk_main(void);
 
-extern void glk_exit(void);
+extern void glk_exit(void) GLK_ATTRIBUTE_NORETURN;
 extern void glk_set_interrupt_handler(void (*func)(void));
 extern void glk_tick(void);
 
