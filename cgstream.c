@@ -393,7 +393,8 @@ strid_t glk_stream_open_resource_uni(glui32 filenum, glui32 rock)
 
     if (res.chunktype == giblorb_ID_TEXT)
         isbinary = FALSE;
-    else if (res.chunktype == giblorb_ID_BINA)
+    else if (res.chunktype == giblorb_ID_BINA
+        || res.chunktype == giblorb_make_id('F', 'O', 'R', 'M'))
         isbinary = TRUE;
     else
         return 0; /* Unknown chunk type */
