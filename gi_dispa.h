@@ -72,6 +72,17 @@ extern void gidispatch_set_retained_registry(
     void (*unregi)(void *array, glui32 len, char *typecode, 
         gidispatch_rock_t objrock));
 
+/* This function is also part of the Glk library, but it only exists
+    on libraries that support autorestore. (Only iosglk, currently.)
+    Only call this if GIDISPATCH_AUTORESTORE_REGISTRY is defined.
+*/
+#define GIDISPATCH_AUTORESTORE_REGISTRY
+extern void gidispatch_set_autorestore_registry(
+    long (*locatearr)(void *array, glui32 len, char *typecode,
+        gidispatch_rock_t objrock, int *elemsizeref),
+    gidispatch_rock_t (*restorearr)(long bufkey, glui32 len,
+        char *typecode, void **arrayref));
+
 /* The following functions make up the Glk dispatch layer. Although they are
     distributed as part of each Glk library (linked into the library file),
     their code is in gi_dispa.c, which is platform-independent and identical
