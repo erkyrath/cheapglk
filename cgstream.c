@@ -259,7 +259,8 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
         fclose(fl);
         return NULL;
     }
-    
+   
+    str->isbinary = !fref->textmode;
     str->file = fl;
     str->lastop = 0;
     
@@ -454,6 +455,7 @@ strid_t gli_stream_open_pathname(char *pathname, int writemode,
         return NULL;
     }
     
+    str->isbinary = !textmode;
     str->file = fl;
     str->lastop = 0;
     
@@ -656,11 +658,17 @@ static void gli_put_char(stream_t *str, unsigned char ch)
                 putc(ch, str->file);
             }
             else {
-                /* cheap big-endian stream */
-                putc(0, str->file);
-                putc(0, str->file);
-                putc(0, str->file);
-                putc(ch, str->file);
+                if (!str->isbinary) {
+                    /* cheap UTF-8 stream */
+                    gli_putchar_utf8(ch, str->file);
+                }
+                else {
+                    /* cheap big-endian stream */
+                    putc(0, str->file);
+                    putc(0, str->file);
+                    putc(0, str->file);
+                    putc(ch, str->file);
+                }
             }
             break;
         case strtype_Resource:
@@ -722,11 +730,17 @@ static void gli_put_char_uni(stream_t *str, glui32 ch)
                 putc(ch, str->file);
             }
             else {
-                /* cheap big-endian stream */
-                putc(((ch >> 24) & 0xFF), str->file);
-                putc(((ch >> 16) & 0xFF), str->file);
-                putc(((ch >>  8) & 0xFF), str->file);
-                putc( (ch        & 0xFF), str->file);
+                if (!str->isbinary) {
+                    /* cheap UTF-8 stream */
+                    gli_putchar_utf8(ch, str->file);
+                }
+                else {
+                    /* cheap big-endian stream */
+                    putc(((ch >> 24) & 0xFF), str->file);
+                    putc(((ch >> 16) & 0xFF), str->file);
+                    putc(((ch >>  8) & 0xFF), str->file);
+                    putc( (ch        & 0xFF), str->file);
+                }
             }
             break;
         case strtype_Resource:
@@ -815,13 +829,20 @@ static void gli_put_buffer(stream_t *str, char *buf, glui32 len)
                 fwrite(buf, 1, len, str->file);
             }
             else {
-                /* cheap big-endian stream */
-                for (lx=0; lx<len; lx++) {
-                    unsigned char ch = ((unsigned char *)buf)[lx];
-                    putc(((ch >> 24) & 0xFF), str->file);
-                    putc(((ch >> 16) & 0xFF), str->file);
-                    putc(((ch >>  8) & 0xFF), str->file);
-                    putc( (ch        & 0xFF), str->file);
+                if (!str->isbinary) {
+                    /* cheap UTF-8 stream */
+                    for (lx=0; lx<len; lx++)
+                        gli_putchar_utf8(((unsigned char *)buf)[lx], str->file);
+                }
+                else {
+                    /* cheap big-endian stream */
+                    for (lx=0; lx<len; lx++) {
+                        unsigned char ch = ((unsigned char *)buf)[lx];
+                        putc(((ch >> 24) & 0xFF), str->file);
+                        putc(((ch >> 16) & 0xFF), str->file);
+                        putc(((ch >>  8) & 0xFF), str->file);
+                        putc( (ch        & 0xFF), str->file);
+                    }
                 }
             }
             break;
