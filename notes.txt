@@ -165,6 +165,9 @@ key as meta key" preference.)
 
 * Version History
 
+1.0.5###:
+    Text-mode Unicode file streams are now read and written in UTF-8.
+
 1.0.4:
     Updated the Blorb-resource functions to understand FORM chunks
     (Glk 0.7.4 amendment).

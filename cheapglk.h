@@ -175,4 +175,46 @@ extern glui32 gli_parse_utf8(unsigned char *buf, glui32 buflen,
     (evp)->val1 = 0,   \
     (evp)->val2 = 0)
 
+/* A macro which reads and decodes one character of UTF-8. Needs no
+   explanation, I'm sure.
+
+   Oh, okay. The character will be written to *chptr (so pass in "&ch",
+   where ch is a glui32 variable). eofcond should be a condition to
+   evaluate end-of-stream -- true if no more characters are readable.
+   nextch is a function which reads the next character; this is invoked
+   exactly as many times as necessary.
+
+   val0, val1, val2, val3 should be glui32 scratch variables. The macro
+   needs these. Just define them, you don't need to pay attention to them
+   otherwise.
+
+   The macro itself evaluates to true if ch was successfully set, or
+   false if something went wrong. (Not enough characters, or an
+   invalid byte sequence.)
+
+   This is not the worst macro I've ever written, but I forget what the
+   other one was.
+*/
+
+#define UTF8_DECODE_INLINE(chptr, eofcond, nextch, val0, val1, val2, val3)  ( \
+    (eofcond ? 0 : ( \
+        (((val0=nextch) < 0x80) ? (*chptr=val0, 1) : ( \
+            (eofcond ? 0 : ( \
+                (((val1=nextch) & 0xC0) != 0x80) ? 0 : ( \
+                    (((val0 & 0xE0) == 0xC0) ? (*chptr=((val0 & 0x1F) << 6) | (val1 & 0x3F), 1) : ( \
+                        (eofcond ? 0 : ( \
+                            (((val2=nextch) & 0xC0) != 0x80) ? 0 : ( \
+                                (((val0 & 0xF0) == 0xE0) ? (*chptr=(((val0 & 0xF)<<12)  & 0x0000F000) | (((val1 & 0x3F)<<6) & 0x00000FC0) | (((val2 & 0x3F))    & 0x0000003F), 1) : ( \
+                                    (((val0 & 0xF0) != 0xF0 || eofcond) ? 0 : (\
+                                        (((val3=nextch) & 0xC0) != 0x80) ? 0 : (*chptr=(((val0 & 0x7)<<18)   & 0x1C0000) | (((val1 & 0x3F)<<12) & 0x03F000) | (((val2 & 0x3F)<<6)  & 0x000FC0) | (((val3 & 0x3F))     & 0x00003F), 1) \
+                                        )) \
+                                    )) \
+                                )) \
+                            )) \
+                        )) \
+                )) \
+            )) \
+        )) \
+    )
+
 #endif /* CHEAPGLK_H */
