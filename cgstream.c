@@ -996,6 +996,9 @@ static glsi32 gli_get_char(stream_t *str, int want_unicode)
                 int flag = UTF8_DECODE_INLINE(&ch, (res=getc(str->file), res == -1), (res & 0xFF), val0, val1, val2, val3);
                 if (!flag)
                     return -1;
+                str->readcount++;
+                if (!want_unicode && ch >= 0x100)
+                    return '?';
                 return (glsi32)ch;
             }
         case strtype_Window:
