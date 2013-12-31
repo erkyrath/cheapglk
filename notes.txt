@@ -167,6 +167,8 @@ key as meta key" preference.)
 
 1.0.5###:
     Text-mode Unicode file streams are now read and written in UTF-8.
+    Fixed a struct initialization bug in gli_date_to_tm(). (I think this
+    caused no problems in practice.)
 
 1.0.4:
     Updated the Blorb-resource functions to understand FORM chunks
