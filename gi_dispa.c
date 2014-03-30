@@ -72,6 +72,7 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "gestalt_DateTime", (20) },
     { "gestalt_DrawImage", (7) },
     { "gestalt_Graphics", (6) },
+    { "gestalt_GraphicsCharInput", (23) },
     { "gestalt_GraphicsTransparency", (14) },
     { "gestalt_HyperlinkInput", (12) },
     { "gestalt_Hyperlinks", (11) },
