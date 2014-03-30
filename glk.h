@@ -43,10 +43,10 @@ typedef int32_t glsi32;
     and simply "#define GLK_ATTRIBUTE_NORETURN". */
 #if defined(__GNUC__) || defined(__clang__)
 #define GLK_ATTRIBUTE_NORETURN __attribute__((__noreturn__))
-#endif // defined(__GNUC__) || defined(__clang__)
+#endif /* defined(__GNUC__) || defined(__clang__) */
 #ifndef GLK_ATTRIBUTE_NORETURN
 #define GLK_ATTRIBUTE_NORETURN
-#endif // GLK_ATTRIBUTE_NORETURN
+#endif /* GLK_ATTRIBUTE_NORETURN */
 
 /* These types are opaque object identifiers. They're pointers to opaque
     C structures, which are defined differently by each library. */
