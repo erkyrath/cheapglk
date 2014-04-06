@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "glk.h"
+#include "gi_debug.h"
 #include "cheapglk.h"
 #include "glkstart.h"
 
@@ -9,6 +10,9 @@ int gli_screenwidth = 80;
 int gli_screenheight = 24; 
 int gli_utf8output = FALSE;
 int gli_utf8input = FALSE;
+#ifdef GIDEBUG_LIBRARY_SUPPORT
+int gli_debugger = FALSE;
+#endif /* GIDEBUG_LIBRARY_SUPPORT */
 
 static int inittime = FALSE;
 
@@ -161,6 +165,11 @@ int main(int argc, char *argv[])
                 case 'q':
                     display_version = FALSE;
                     break;
+#ifdef GIDEBUG_LIBRARY_SUPPORT
+                case 'D':
+                    gli_debugger = TRUE;
+                    break;
+#endif /* GIDEBUG_LIBRARY_SUPPORT */
                 default:
                     printf("%s: unknown option: %s\n\n", argv[0], argv[ix]);
                     errflag = TRUE;
@@ -170,7 +179,12 @@ int main(int argc, char *argv[])
     }
 
     if (errflag) {
-        printf("usage: %s -w WIDTH -h HEIGHT -u[i|o] -q\n", argv[0]);
+#ifdef GIDEBUG_LIBRARY_SUPPORT
+        char *debugoption = " -D";
+#else  /* GIDEBUG_LIBRARY_SUPPORT */
+        char *debugoption = "";
+#endif /* GIDEBUG_LIBRARY_SUPPORT */
+        printf("usage: %s -w WIDTH -h HEIGHT -u[i|o] -q%s\n", argv[0], debugoption);
         if (glkunix_arguments[0].argtype != glkunix_arg_End) {
             glkunix_argumentlist_t *argform;
             printf("game options:\n");
@@ -202,8 +216,13 @@ int main(int argc, char *argv[])
     inittime = FALSE;
 
     if (display_version) {
-        printf("Welcome to the Cheap Glk Implementation, library version %s.\n\n", 
-            LIBRARY_VERSION);
+        char *debugoption = "";
+#ifdef GIDEBUG_LIBRARY_SUPPORT
+        if (gli_debugger)
+            debugoption = " Debug support is on.";
+#endif /* GIDEBUG_LIBRARY_SUPPORT */
+        printf("Welcome to the Cheap Glk Implementation, library version %s.%s\n\n", 
+            LIBRARY_VERSION, debugoption);
     }
     glk_main();
     glk_exit();
