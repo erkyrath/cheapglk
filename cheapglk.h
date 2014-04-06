@@ -12,6 +12,7 @@
 #define LIBRARY_VERSION "1.0.4"
 
 #include "gi_dispa.h"
+#include "gi_debug.h"
 
 /* First, we define our own TRUE and FALSE and NULL, because ANSI
     is a strange world. */
@@ -39,6 +40,11 @@ extern int gli_screenwidth, gli_screenheight;
    stdin/stdout) is expecting UTF-8 encoding? Normally input and output
    will be the same, but they don't have to be. */
 extern int gli_utf8output, gli_utf8input;
+
+#ifdef GIDEBUG_LIBRARY_SUPPORT
+/* Has the user requested debug support? */
+extern int gli_debugger;
+#endif /* GIDEBUG_LIBRARY_SUPPORT */
 
 /* Callbacks necessary for the dispatch layer. */
 extern gidispatch_rock_t (*gli_register_obj)(void *obj, glui32 objclass);
