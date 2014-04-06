@@ -35,6 +35,9 @@
     better implementation would check the real screen size
     somehow. */
 extern int gli_screenwidth, gli_screenheight;
+/* Should we assume that the terminal (or whatever is handling our 
+   stdin/stdout) is expecting UTF-8 encoding? Normally input and output
+   will be the same, but they don't have to be. */
 extern int gli_utf8output, gli_utf8input;
 
 /* Callbacks necessary for the dispatch layer. */
