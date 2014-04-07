@@ -15,6 +15,8 @@ gidispatch_rock_t (*gli_register_arr)(void *array, glui32 len,
 void (*gli_unregister_arr)(void *array, glui32 len, char *typecode, 
     gidispatch_rock_t objrock) = NULL;
 
+static void perform_debug_command(char *cmd);
+
 void gli_initialize_misc()
 {
     int ix;
@@ -95,10 +97,26 @@ void glk_select(event_t *event)
             be turned into a special keycode (and so would other keys,
             if we could recognize them.) */
  
-        res = fgets(buf, 255, stdin);
-        if (!res) {
-            printf("\n<end of input>\n");
-            glk_exit();
+        while (1) {
+            /* If debug mode is on, it may capture input, in which case
+               we need to loop until real input arrives. */
+
+            res = fgets(buf, 255, stdin);
+            if (!res) {
+                printf("\n<end of input>\n");
+                glk_exit();
+            }
+
+            if (gli_debugger) {
+                if (buf[0] == '/') {
+                    perform_debug_command(buf);
+                    printf(">");
+                    continue;
+                }
+            }
+
+            /* not debug input */
+            break;
         }
 
         if (!gli_utf8input) {
@@ -135,10 +153,26 @@ void glk_select(event_t *event)
         int val;
         glui32 ix;
 
-        res = fgets(buf, 255, stdin);
-        if (!res) {
-            printf("\n<end of input>\n");
-            glk_exit();
+        while (1) {
+            /* If debug mode is on, it may capture input, in which case
+               we need to loop until real input arrives. */
+
+            res = fgets(buf, 255, stdin);
+            if (!res) {
+                printf("\n<end of input>\n");
+                glk_exit();
+            }
+
+            if (gli_debugger) {
+                if (buf[0] == '/') {
+                    perform_debug_command(buf);
+                    printf(">");
+                    continue;
+                }
+            }
+
+            /* not debug input */
+            break; 
         }
 
         val = strlen(buf);
@@ -294,6 +328,18 @@ void gidispatch_set_autorestore_registry(
        does not have the capability of autosaving and autorestoring.
        Therefore, it will never call these hooks. Therefore, we ignore
        them and do nothing here. */
+}
+
+static void perform_debug_command(char *cmd)
+{
+    /*### UTF-8 if necessary */
+
+    int val = strlen(cmd);
+    if (val && (cmd[val-1] == '\n' || cmd[val-1] == '\r')) {
+        cmd[val-1] = '\0';
+    }
+
+    gidebug_perform_command(cmd);
 }
 
 void gidebug_output(char *text)

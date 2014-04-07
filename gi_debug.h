@@ -13,8 +13,12 @@ typedef void (*gidebug_cmd_handler)(char *text);
 /* ### Game calls this if it has a debugging mode. (Library controls
    whether it's used.) */
 extern void gidebug_debugging_available(gidebug_cmd_handler handler);
+
 /* ### Library calls this to check whether the game has a debugging mode. */
 extern int gidebug_debugging_is_available(void);
+
+/* ### */
+extern void gidebug_perform_command(char *cmd);
 
 #if GIDEBUG_LIBRARY_SUPPORT
 

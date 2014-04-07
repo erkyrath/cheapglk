@@ -19,3 +19,14 @@ int gidebug_debugging_is_available()
 {
     return (debug_handler != NULL);
 }
+
+void gidebug_perform_command(char *cmd)
+{
+    if (!gidebug_debugging_is_available()) {
+        gidebug_output("The interpreter does not have a debug feature.");
+        return;
+    }
+
+    debug_handler(cmd);
+}
+
