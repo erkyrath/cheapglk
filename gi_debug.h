@@ -4,9 +4,17 @@
 /* ###debug Uncomment if the library supports a UI for debug commands. */
 #define GIDEBUG_LIBRARY_SUPPORT (1)
 
+typedef void (*gidebug_cmd_handler)(char *text);
+
+/* The gidebug-layer functions are always available (assuming this header
+   exists!) The game should have a compile-time option (e.g. VM_DEBUGGER)
+   so as not to rely on this header. */
+
 /* ### Game calls this if it has a debugging mode. (Library controls
    whether it's used.) */
-extern void gidebug_debugging_available(void);
+extern void gidebug_debugging_available(gidebug_cmd_handler handler);
+/* ### Library calls this to check whether the game has a debugging mode. */
+extern int gidebug_debugging_is_available(void);
 
 #if GIDEBUG_LIBRARY_SUPPORT
 

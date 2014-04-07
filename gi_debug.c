@@ -1,10 +1,21 @@
 #include "glk.h"
 #include "gi_debug.h"
 
-static int debug_active = 0;
+#ifndef NULL
+#define NULL 0
+#endif
 
-void gidebug_debugging_available()
+static gidebug_cmd_handler debug_handler = NULL;
+
+void gidebug_debugging_available(gidebug_cmd_handler handler)
 {
-    debug_active = 1;
+    if (!handler)
+        return;
+
+    debug_handler = handler;
 }
 
+int gidebug_debugging_is_available()
+{
+    return (debug_handler != NULL);
+}
