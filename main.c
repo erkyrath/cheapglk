@@ -10,7 +10,7 @@ int gli_screenwidth = 80;
 int gli_screenheight = 24; 
 int gli_utf8output = FALSE;
 int gli_utf8input = FALSE;
-#ifdef GIDEBUG_LIBRARY_SUPPORT
+#if GIDEBUG_LIBRARY_SUPPORT
 int gli_debugger = FALSE;
 #endif /* GIDEBUG_LIBRARY_SUPPORT */
 
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
                 case 'q':
                     display_version = FALSE;
                     break;
-#ifdef GIDEBUG_LIBRARY_SUPPORT
+#if GIDEBUG_LIBRARY_SUPPORT
                 case 'D':
                     gli_debugger = TRUE;
                     break;
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
     }
 
     if (errflag) {
-#ifdef GIDEBUG_LIBRARY_SUPPORT
+#if GIDEBUG_LIBRARY_SUPPORT
         char *debugoption = " -D";
 #else  /* GIDEBUG_LIBRARY_SUPPORT */
         char *debugoption = "";
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
 
     if (display_version) {
         char *debugoption = "";
-#ifdef GIDEBUG_LIBRARY_SUPPORT
+#if GIDEBUG_LIBRARY_SUPPORT
         if (gli_debugger)
             debugoption = " Debug support is on.";
 #endif /* GIDEBUG_LIBRARY_SUPPORT */
