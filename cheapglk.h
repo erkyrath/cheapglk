@@ -41,7 +41,7 @@ extern int gli_screenwidth, gli_screenheight;
    will be the same, but they don't have to be. */
 extern int gli_utf8output, gli_utf8input;
 
-#ifdef GIDEBUG_LIBRARY_SUPPORT
+#if GIDEBUG_LIBRARY_SUPPORT
 /* Has the user requested debug support? */
 extern int gli_debugger;
 #endif /* GIDEBUG_LIBRARY_SUPPORT */

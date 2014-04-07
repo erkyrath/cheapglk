@@ -295,3 +295,12 @@ void gidispatch_set_autorestore_registry(
        Therefore, it will never call these hooks. Therefore, we ignore
        them and do nothing here. */
 }
+
+void gidebug_output(char *text)
+{
+    /* Send a line of text to the "debug console". */
+    /* (The text is UTF-8 whether or not the library output has requested
+       that encoding. The user will just have to cope.) */
+    printf("Debug: %s\n", text);
+}
+
