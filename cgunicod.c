@@ -29,6 +29,48 @@ void gli_putchar_utf8(glui32 val, FILE *fl)
     }
 }
 
+int gli_encode_utf8(glui32 val, char *buf, int len)
+{
+    /* return the number of bytes (actually) generated */
+    char *ptr = buf;
+    char *end = buf+len;
+
+    if (val < 0x80) {
+        if (ptr < end)
+            *ptr++ = val;
+    }
+    else if (val < 0x800) {
+        if (ptr < end)
+            *ptr++ = (0xC0 | ((val & 0x7C0) >> 6));
+        if (ptr < end)
+            *ptr++ = (0x80 |  (val & 0x03F)     );
+    }
+    else if (val < 0x10000) {
+        if (ptr < end)
+            *ptr++ = (0xE0 | ((val & 0xF000) >> 12));
+        if (ptr < end)
+            *ptr++ = (0x80 | ((val & 0x0FC0) >>  6));
+        if (ptr < end)
+            *ptr++ = (0x80 |  (val & 0x003F)      );
+    }
+    else if (val < 0x200000) {
+        if (ptr < end)
+            *ptr++ = (0xF0 | ((val & 0x1C0000) >> 18));
+        if (ptr < end)
+            *ptr++ = (0x80 | ((val & 0x03F000) >> 12));
+        if (ptr < end)
+            *ptr++ = (0x80 | ((val & 0x000FC0) >>  6));
+        if (ptr < end)
+            *ptr++ = (0x80 |  (val & 0x00003F)      );
+    }
+    else {
+        if (ptr < end)
+            *ptr++ = '?';
+    }
+
+    return (ptr - buf);
+}
+
 glui32 gli_parse_utf8(unsigned char *buf, glui32 buflen,
     glui32 *out, glui32 outlen)
 {

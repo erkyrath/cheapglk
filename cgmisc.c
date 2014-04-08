@@ -332,7 +332,22 @@ void gidispatch_set_autorestore_registry(
 
 static void perform_debug_command(char *cmd)
 {
-    /*### UTF-8 if necessary */
+    char *allocbuf = NULL;
+
+    if (!gli_utf8input) {
+        /* The string is Latin-1. We should convert to UTF-8. We do
+           this in a very lazy way: alloc the largest possible buffer. */
+        int len = 4*strlen(cmd)+4;
+        allocbuf = malloc(len);
+        char *ptr = allocbuf;
+        int count = 0;
+        while (*cmd) {
+            count += gli_encode_utf8(*cmd, ptr+count, len-count);
+            cmd++;
+        }
+        *(ptr+count) = '\0';
+        cmd = allocbuf;
+    }
 
     int val = strlen(cmd);
     if (val && (cmd[val-1] == '\n' || cmd[val-1] == '\r')) {
@@ -340,6 +355,9 @@ static void perform_debug_command(char *cmd)
     }
 
     gidebug_perform_command(cmd);
+
+    if (allocbuf)
+        free(allocbuf);
 }
 
 void gidebug_output(char *text)

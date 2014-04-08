@@ -173,6 +173,7 @@ extern fileref_t *gli_new_fileref(char *filename, glui32 usage,
 extern void gli_delete_fileref(fileref_t *fref);
 
 extern void gli_putchar_utf8(glui32 val, FILE *fl);
+extern int gli_encode_utf8(glui32 val, char *buf, int len);
 extern glui32 gli_parse_utf8(unsigned char *buf, glui32 buflen,
     glui32 *out, glui32 outlen);
 
