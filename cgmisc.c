@@ -362,9 +362,11 @@ static void perform_debug_command(char *cmd)
 
 void gidebug_output(char *text)
 {
-    /* Send a line of text to the "debug console". */
+    /* Send a line of text to the "debug console", if the user has
+       requested debugging mode. */
     /* (The text is UTF-8 whether or not the library output has requested
        that encoding. The user will just have to cope.) */
-    printf("Debug: %s\n", text);
+    if (gli_debugger)
+        printf("Debug: %s\n", text);
 }
 
