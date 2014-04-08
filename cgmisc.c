@@ -109,7 +109,7 @@ void glk_select(event_t *event)
 
             if (gli_debugger) {
                 if (buf[0] == '/') {
-                    perform_debug_command(buf);
+                    perform_debug_command(buf+1);
                     printf(">");
                     continue;
                 }
@@ -165,7 +165,7 @@ void glk_select(event_t *event)
 
             if (gli_debugger) {
                 if (buf[0] == '/') {
-                    perform_debug_command(buf);
+                    perform_debug_command(buf+1);
                     printf(">");
                     continue;
                 }

@@ -14,7 +14,8 @@ typedef void (*gidebug_cmd_handler)(char *text);
    whether it's used.) */
 extern void gidebug_debugging_available(gidebug_cmd_handler handler);
 
-/* ### Library calls this to check whether the game has a debugging mode. */
+/* ### Library calls this to check whether the game has a debugging mode.
+   (For greying out a menu option?) */
 extern int gidebug_debugging_is_available(void);
 
 /* ### */

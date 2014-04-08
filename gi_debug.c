@@ -23,7 +23,9 @@ int gidebug_debugging_is_available()
 void gidebug_perform_command(char *cmd)
 {
     if (!gidebug_debugging_is_available()) {
+#if GIDEBUG_LIBRARY_SUPPORT
         gidebug_output("The interpreter does not have a debug feature.");
+#endif /* GIDEBUG_LIBRARY_SUPPORT */
         return;
     }
 
