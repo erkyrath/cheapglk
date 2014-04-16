@@ -5,19 +5,24 @@
 #define NULL 0
 #endif
 
-static gidebug_cmd_handler debug_handler = NULL;
+static gidebug_cmd_handler debug_cmd_handler = NULL;
+static gidebug_cycle_handler debug_cycle_handler = NULL;
 
-void gidebug_debugging_available(gidebug_cmd_handler handler)
+void gidebug_debugging_available(gidebug_cmd_handler cmdhandler, gidebug_cycle_handler cyclehandler)
 {
-    if (!handler)
-        return;
-
-    debug_handler = handler;
+    debug_cmd_handler = cmdhandler;
+    debug_cycle_handler = cyclehandler;
 }
 
 int gidebug_debugging_is_available()
 {
-    return (debug_handler != NULL);
+    return (debug_cmd_handler != NULL);
+}
+
+void gidebug_announce_cycle(gidebug_cycle cycle)
+{
+    if (debug_cycle_handler)
+        debug_cycle_handler(cycle);
 }
 
 void gidebug_perform_command(char *cmd)
@@ -29,6 +34,6 @@ void gidebug_perform_command(char *cmd)
         return;
     }
 
-    debug_handler(cmd);
+    debug_cmd_handler(cmd);
 }
 

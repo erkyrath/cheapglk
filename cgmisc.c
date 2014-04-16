@@ -51,6 +51,8 @@ void gli_initialize_misc()
 
 void glk_exit()
 {
+    if (gli_debugger)
+        gidebug_announce_cycle(gidebug_cycle_End);
     exit(0);
 }
 
@@ -75,6 +77,8 @@ void glk_select(event_t *event)
     
     gli_event_clearevent(event);
     
+    if (gli_debugger)
+        gidebug_announce_cycle(gidebug_cycle_InputWait);
     fflush(stdout);
 
     if (!win || !(win->char_request || win->line_request)) {
@@ -240,6 +244,9 @@ void glk_select(event_t *event)
         event->win = win;
         event->val1 = val;
     }
+
+    if (gli_debugger)
+        gidebug_announce_cycle(gidebug_cycle_InputAccept);
 }
 
 void glk_select_poll(event_t *event)

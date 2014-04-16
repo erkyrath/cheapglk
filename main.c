@@ -224,6 +224,10 @@ int main(int argc, char *argv[])
         printf("Welcome to the Cheap Glk Implementation, library version %s.%s\n\n", 
             LIBRARY_VERSION, debugoption);
     }
+
+    if (gli_debugger)
+        gidebug_announce_cycle(gidebug_cycle_Start);
+
     glk_main();
     glk_exit();
     

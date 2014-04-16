@@ -30,6 +30,9 @@ newlines.)
 
     -q: Don't display the "Welcome to CheapGlk" banner before the game.
 
+    -D: Consider "/" to be a debug command prefix; all /commands are
+        passed to the game debugger (if it has one).
+
 * Notes on building this mess:
 
 See the top of the Makefile for comments on installation.
