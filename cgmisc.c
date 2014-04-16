@@ -15,6 +15,10 @@ gidispatch_rock_t (*gli_register_arr)(void *array, glui32 len,
 void (*gli_unregister_arr)(void *array, glui32 len, char *typecode, 
     gidispatch_rock_t objrock) = NULL;
 
+/* This is needed to redisplay prompts properly after debug output. 
+   Not interesting. */
+static int debug_output_counter = 0;
+
 static void perform_debug_command(char *cmd);
 
 void gli_initialize_misc()
@@ -77,8 +81,13 @@ void glk_select(event_t *event)
     
     gli_event_clearevent(event);
     
-    if (gli_debugger)
+    if (gli_debugger) {
         gidebug_announce_cycle(gidebug_cycle_InputWait);
+        if (debug_output_counter) {
+            debug_output_counter = 0;
+            printf(">");
+        }
+    }
     fflush(stdout);
 
     if (!win || !(win->char_request || win->line_request)) {
@@ -114,6 +123,7 @@ void glk_select(event_t *event)
             if (gli_debugger) {
                 if (buf[0] == '/') {
                     perform_debug_command(buf+1);
+                    debug_output_counter = 0;
                     printf(">");
                     continue;
                 }
@@ -170,6 +180,7 @@ void glk_select(event_t *event)
             if (gli_debugger) {
                 if (buf[0] == '/') {
                     perform_debug_command(buf+1);
+                    debug_output_counter = 0;
                     printf(">");
                     continue;
                 }
@@ -373,7 +384,9 @@ void gidebug_output(char *text)
        requested debugging mode. */
     /* (The text is UTF-8 whether or not the library output has requested
        that encoding. The user will just have to cope.) */
-    if (gli_debugger)
+    if (gli_debugger) {
         printf("Debug: %s\n", text);
+        debug_output_counter++;
+    }
 }
 
