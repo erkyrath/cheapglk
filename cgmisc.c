@@ -19,7 +19,7 @@ void (*gli_unregister_arr)(void *array, glui32 len, char *typecode,
    Not interesting. */
 static int debug_output_counter = 0;
 
-static void perform_debug_command(char *cmd);
+static int perform_debug_command(char *cmd);
 
 void gli_initialize_misc()
 {
@@ -348,9 +348,10 @@ void gidispatch_set_autorestore_registry(
        them and do nothing here. */
 }
 
-static void perform_debug_command(char *cmd)
+static int perform_debug_command(char *cmd)
 {
     char *allocbuf = NULL;
+    int res = 1;
 
     if (!gli_utf8input) {
         /* The string is Latin-1. We should convert to UTF-8. We do
@@ -372,10 +373,12 @@ static void perform_debug_command(char *cmd)
         cmd[val-1] = '\0';
     }
 
-    gidebug_perform_command(cmd);
+    res = gidebug_perform_command(cmd);
 
     if (allocbuf)
         free(allocbuf);
+
+    return res;
 }
 
 void gidebug_output(char *text)
@@ -406,6 +409,7 @@ void gidebug_pause()
     while (1) {
         char buf[256];
         char *res;
+        int unpause;
 
         res = fgets(buf, 255, stdin);
         if (!res) {
@@ -418,8 +422,10 @@ void gidebug_pause()
         if (res[0] == '/')
             res++;
 
-        perform_debug_command(res);
-        /*### perhaps break */
+        unpause = perform_debug_command(res);
+        if (unpause)
+            break;
+
         debug_output_counter = 0;
         printf(">>");
     }
