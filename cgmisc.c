@@ -390,3 +390,40 @@ void gidebug_output(char *text)
     }
 }
 
+/* Block and wait for debug commands. The library will accept debug commands
+   until gidebug_perform_command() returns nonzero.
+
+   This behaves a lot like glk_select(), except that it only handles debug
+   input, not any of the standard event types.
+*/
+void gidebug_pause()
+{
+    gidebug_announce_cycle(gidebug_cycle_DebugPause);
+    debug_output_counter = 0;
+    printf(">>");
+    fflush(stdout);
+
+    while (1) {
+        char buf[256];
+        char *res;
+
+        res = fgets(buf, 255, stdin);
+        if (!res) {
+            printf("\n<end of input>\n");
+            break;
+        }
+
+        /* The slash is optional at the beginning of a line grabbed this
+           way. */
+        if (res[0] == '/')
+            res++;
+
+        perform_debug_command(res);
+        /*### perhaps break */
+        debug_output_counter = 0;
+        printf(">>");
+    }
+
+    gidebug_announce_cycle(gidebug_cycle_DebugUnpause);
+}
+
