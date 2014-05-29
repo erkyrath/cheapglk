@@ -5,13 +5,15 @@
 #define GIDEBUG_LIBRARY_SUPPORT (1)
 
 typedef enum gidebug_cycle_enum {
-    gidebug_cycle_Start = 1,
-    gidebug_cycle_End = 2,
-    gidebug_cycle_InputWait = 3,
-    gidebug_cycle_InputAccept = 4,
+    gidebug_cycle_Start        = 1,
+    gidebug_cycle_End          = 2,
+    gidebug_cycle_InputWait    = 3,
+    gidebug_cycle_InputAccept  = 4,
+    gidebug_cycle_DebugPause   = 5,
+    gidebug_cycle_DebugUnpause = 6,
 } gidebug_cycle;
 
-typedef void (*gidebug_cmd_handler)(char *text);
+typedef int (*gidebug_cmd_handler)(char *text);
 typedef void (*gidebug_cycle_handler)(int cycle);
 
 /* The gidebug-layer functions are always available (assuming this header
@@ -26,8 +28,10 @@ extern void gidebug_debugging_available(gidebug_cmd_handler cmdhandler, gidebug_
    (For greying out a menu option?) */
 extern int gidebug_debugging_is_available(void);
 
-/* ### Library calls this when the user enters a debug command. */
-extern void gidebug_perform_command(char *cmd);
+/* ### Library calls this when the user enters a debug command.
+   Game should return 1 if the library should unblock and continue (after
+   a pause). */
+extern int gidebug_perform_command(char *cmd);
 
 /* ### Library calls this when the game starts, stops, waits for input,
    or receives input. */
@@ -42,10 +46,9 @@ extern void gidebug_announce_cycle(gidebug_cycle cycle);
    (no newlines), and UTF-8 if necessary. */
 extern void gidebug_output(char *text);
 
-/* Ask the user for a line of debug input. Returns the number of characters
-   entered. */
-/* ### Is this what we want? What happens when the VM hits a breakpoint? */
-extern int gidebug_input(char *buffer, int len);
+/* Block and wait for debug commands. The library will accept debug commands
+   until gidebug_perform_command() returns nonzero. */
+extern void gidebug_pause(void);
 
 #endif /* GIDEBUG_LIBRARY_SUPPORT */
 

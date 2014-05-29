@@ -25,15 +25,15 @@ void gidebug_announce_cycle(gidebug_cycle cycle)
         debug_cycle_handler(cycle);
 }
 
-void gidebug_perform_command(char *cmd)
+int gidebug_perform_command(char *cmd)
 {
     if (!gidebug_debugging_is_available()) {
 #if GIDEBUG_LIBRARY_SUPPORT
         gidebug_output("The interpreter does not have a debug feature.");
 #endif /* GIDEBUG_LIBRARY_SUPPORT */
-        return;
+        return 1;
     }
 
-    debug_cmd_handler(cmd);
+    return debug_cmd_handler(cmd);
 }
 
