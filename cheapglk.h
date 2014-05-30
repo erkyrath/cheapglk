@@ -44,6 +44,8 @@ extern int gli_utf8output, gli_utf8input;
 #if GIDEBUG_LIBRARY_SUPPORT
 /* Has the user requested debug support? */
 extern int gli_debugger;
+#else /* GIDEBUG_LIBRARY_SUPPORT */
+#define gli_debugger (0)
 #endif /* GIDEBUG_LIBRARY_SUPPORT */
 
 /* Callbacks necessary for the dispatch layer. */

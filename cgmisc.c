@@ -381,6 +381,8 @@ static int perform_debug_command(char *cmd)
     return res;
 }
 
+#if GIDEBUG_LIBRARY_SUPPORT
+
 void gidebug_output(char *text)
 {
     /* Send a line of text to the "debug console", if the user has
@@ -439,3 +441,4 @@ void gidebug_pause()
     gidebug_announce_cycle(gidebug_cycle_DebugUnpause);
 }
 
+#endif /* GIDEBUG_LIBRARY_SUPPORT */
