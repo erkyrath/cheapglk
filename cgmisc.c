@@ -401,6 +401,10 @@ void gidebug_output(char *text)
 */
 void gidebug_pause()
 {
+    if (!gli_debugger) {
+        return;
+    }
+
     gidebug_announce_cycle(gidebug_cycle_DebugPause);
     debug_output_counter = 0;
     printf(">>");
