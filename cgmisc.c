@@ -423,8 +423,10 @@ void gidebug_pause()
             res++;
 
         unpause = perform_debug_command(res);
-        if (unpause)
+        if (unpause) {
+            debug_output_counter = 0;
             break;
+        }
 
         debug_output_counter = 0;
         printf(">>");
