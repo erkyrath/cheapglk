@@ -129,7 +129,7 @@ typedef void (*gidebug_cycle_handler)(int cycle);
    The cmdhandler argument must be a function that accepts a debug
    command (a UTF-8 string) and executes it, displaying output via
    gidebug_output(). The function should return nonzero for a "continue"
-   command (this is only relevant inside gidebug_pause()).
+   command (only relevant inside gidebug_pause()).
 
    The cyclehandler argument should be a function to be notified
    when the game starts, stops, and blocks for input. (This is optional;
@@ -147,7 +147,12 @@ extern int gidebug_debugging_is_available(void);
 /* The library calls this when the user enters a command in the debug
    console. The command will be passed along to the game's cmdhandler,
    if one was supplied. This will return nonzero for a "continue"
-   command (this is only relevant inside gidebug_pause()).
+   command (only relevant inside gidebug_pause()).
+
+   This may only be called when the game is waiting for input! This
+   means one of two circumstances: while inside glk_select(), or
+   while inside gidebug_pause(). If you call it at any other time,
+   you've made some kind of horrible threading mistake.
 */
 extern int gidebug_perform_command(char *cmd);
 
