@@ -49,6 +49,8 @@
     (See unixstrt.c in the Glulxe source.) If it does not do this, the
     library knows that debug commands cannot be handled; it should
     disable or hide the "debug console" UI.
+
+    
 */
 
 
@@ -71,21 +73,38 @@ typedef void (*gidebug_cycle_handler)(int cycle);
    exists!) The game should have a compile-time option (e.g. VM_DEBUGGER)
    so as not to rely on this header. */
 
-/* ### Game calls this if it has a debugging mode. (Library controls
-   whether it's used.) */
+/* The game calls this if it offers debug commands. (The library may
+   or may not make use of them.)
+
+   The cmdhandler argument must be a function that accepts a debug
+   command (a UTF-8 string) and executes it, displaying output via
+   gidebug_output(). The function should return nonzero for a "continue"
+   command (this is only relevant inside gidebug_pause()).
+
+   The cyclehandler argument should be a function to be notified
+   when the game starts, stops, and blocks for input. (This is optional;
+   pass NULL if not needed.)
+*/
 extern void gidebug_debugging_available(gidebug_cmd_handler cmdhandler, gidebug_cycle_handler cyclehandler);
 
-/* ### Library calls this to check whether the game has a debugging mode.
-   (For greying out a menu option?) */
+/* The library calls this to check whether the game accepts debug commands.
+   (Returns nonzero if the game has called gidebug_debugging_available().
+   If this returns zero, the library should disable or hide the debug
+   console.)
+*/
 extern int gidebug_debugging_is_available(void);
 
-/* ### Library calls this when the user enters a debug command.
-   Game should return 1 if the library should unblock and continue (after
-   a pause). */
+/* The library calls this when the user enters a command in the debug
+   console. The command will be passed along to the game's cmdhandler,
+   if one was supplied. This will return nonzero for a "continue"
+   command (this is only relevant inside gidebug_pause()).
+*/
 extern int gidebug_perform_command(char *cmd);
 
-/* ### Library calls this when the game starts, stops, waits for input,
-   or receives input. */
+/* The library calls this when the game starts, stops, waits for input,
+   or receives input. In addition, the gidebug_pause() should call it
+   when pausing and unpausing.
+*/
 extern void gidebug_announce_cycle(gidebug_cycle cycle);
 
 #if GIDEBUG_LIBRARY_SUPPORT
@@ -94,7 +113,7 @@ extern void gidebug_announce_cycle(gidebug_cycle cycle);
    has declared debug support.) */
 
 /* Send a line of text to the debug console. The text will be a single line
-   (no newlines), and UTF-8 if necessary. */
+   (no newlines), in UTF-8. */
 extern void gidebug_output(char *text);
 
 /* Block and wait for debug commands. The library will accept debug commands
