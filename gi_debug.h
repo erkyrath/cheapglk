@@ -25,6 +25,8 @@
     left up to the Glk library. Abstractly, we imagine a "debug
     console" window with its own input line and scrolling text output.
 
+    * Configuration
+
     The debug feature is cooperative: both the library and the game
     must support it for debug commands to work. This requires a dance
     of #ifdefs to make sure that everything builds in all
@@ -50,6 +52,54 @@
     library knows that debug commands cannot be handled; it should
     disable or hide the "debug console" UI.
 
+    * Game responsibilities
+
+    When the game calls gidebug_debugging_available(), it passes two
+    callbacks: one to handle debug commands, and one to be notified
+    at various points in the game's life-cycle. (See below.)
+
+    The command callback should execute the command. The syntax of
+    debug commands is entirely up to the game. Any results should be
+    reported via gidebug_output(), which will display them in the
+    debug console.
+
+    The cycle callback is optional. The game might use it to compute
+    command timing and report it via gidebug_output().
+
+    The game may call gidebug_output() at any time; it doesn't have to
+    be the result of a command. For example, a game crash message could
+    be reported this way. However, remember that not all Glk libraries
+    support the debug console; even if it exists, the player might not
+    be watching it. Assume that game authors know about the debug system,
+    but players in general do not.
+
+    The game may call gidebug_pause() to stop execution for debugging.
+    (Glulxe does this on any crash, or if the game hits a @debugtrap
+    opcode.) This function accepts and executes debugging commands
+    until the user signals that it's time to continue execution.
+
+    * Library responsibilities
+
+    The library must implement gidebug_output(), to send a line of
+    text to the debug console, and gidebug_pause(), to stop and handle
+    debug commands, as described above.
+
+    When the user enters a command in the debug console, the library
+    should pass it (as a string) to gidebug_perform_command(). It
+    will be relayed to the game's command callback.
+
+    The library should call gidebug_announce_cycle() at various points
+    in the game's life-cycle. The argument will be relayed to the
+    game's cycle callback.
+
+    The library should call and pass...
+
+    - gidebug_cycle_Start: just before glk_main() begins
+    - gidebug_cycle_End: when glk_exit() is called or glk_main() returns
+    - gidebug_cycle_InputWait: when glk_select() begins
+    - gidebug_cycle_InputAccept: when glk_select() returns
+    - gidebug_cycle_DebugPause: when gidebug_pause() begins
+    - gidebug_cycle_DebugUnpause: when gidebug_pause() ends
     
 */
 
@@ -101,9 +151,9 @@ extern int gidebug_debugging_is_available(void);
 */
 extern int gidebug_perform_command(char *cmd);
 
-/* The library calls this when the game starts, stops, waits for input,
-   or receives input. In addition, the gidebug_pause() should call it
-   when pausing and unpausing.
+/* The library calls this at various points in the game's life-cycle.
+   The argument will be passed along to the game's cyclehandler,
+   if one was supplied.
 */
 extern void gidebug_announce_cycle(gidebug_cycle cycle);
 
@@ -113,11 +163,18 @@ extern void gidebug_announce_cycle(gidebug_cycle cycle);
    has declared debug support.) */
 
 /* Send a line of text to the debug console. The text will be a single line
-   (no newlines), in UTF-8. */
+   (no newlines), in UTF-8. 
+*/
 extern void gidebug_output(char *text);
 
-/* Block and wait for debug commands. The library will accept debug commands
-   until gidebug_perform_command() returns nonzero. */
+/* Block and wait for debug commands. The library should accept debug
+   commands and pass them to gidebug_perform_command(), repeatedly,
+   until that function returns nonzero. It may also stop of its own
+   accord (say, when an "unpause" menu item is triggered).
+
+   This should call gidebug_announce_cycle(gidebug_cycle_DebugPause)
+   upon entry, and the same with gidebug_cycle_DebugUnpause upon exit.
+*/
 extern void gidebug_pause(void);
 
 #endif /* GIDEBUG_LIBRARY_SUPPORT */
