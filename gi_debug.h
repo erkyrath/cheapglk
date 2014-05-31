@@ -104,7 +104,8 @@
 */
 
 
-/* ###debug Uncomment if the library supports a UI for debug commands. */
+/* Uncomment if the library supports a UI for debug commands.
+   Comment it out if the library doesn't. */
 #define GIDEBUG_LIBRARY_SUPPORT (1)
 
 typedef enum gidebug_cycle_enum {
