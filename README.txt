@@ -1,6 +1,6 @@
 CheapGlk: Cheapass Implementation of the Glk API.
 
-CheapGlk Library: version 1.0.4.
+CheapGlk Library: version 1.0.5.
 Glk API which this implements: version 0.7.4.
 Designed by Andrew Plotkin <erkyrath@eblong.com>
 http://eblong.com/zarf/glk/index.html
@@ -165,7 +165,7 @@ key as meta key" preference.)
 
 * Version History
 
-1.0.5###:
+1.0.5:
     Text-mode Unicode file streams are now read and written in UTF-8.
     Fixed a struct initialization bug in gli_date_to_tm(). (I think this
     caused no problems in practice.)
