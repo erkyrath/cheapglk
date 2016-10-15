@@ -258,5 +258,6 @@ key as meta key" preference.)
 
 * Permissions
 
-The CheapGlk library is copyright 1998-2016 by Andrew Plotkin. It is
-distributed under the MIT license; see the "LICENSE" file.
+The CheapGlk, GiDispa, and GiBlorb libraries, as well as the glk.h header
+file, are copyright 1998-2016 by Andrew Plotkin. They are distributed under
+the MIT license; see the "LICENSE" file.
