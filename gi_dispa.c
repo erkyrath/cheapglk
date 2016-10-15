@@ -326,7 +326,7 @@ glui32 gidispatch_count_classes()
 
 gidispatch_intconst_t *gidispatch_get_class(glui32 index)
 {
-    if (index < 0 || index >= NUMCLASSES)
+    if (index >= NUMCLASSES)
         return NULL;
     return &(class_table[index]);
 }
@@ -338,7 +338,7 @@ glui32 gidispatch_count_intconst()
 
 gidispatch_intconst_t *gidispatch_get_intconst(glui32 index)
 {
-    if (index < 0 || index >= NUMINTCONSTANTS)
+    if (index >= NUMINTCONSTANTS)
         return NULL;
     return &(intconstant_table[index]);
 }
@@ -350,7 +350,7 @@ glui32 gidispatch_count_functions()
 
 gidispatch_function_t *gidispatch_get_function(glui32 index)
 {
-    if (index < 0 || index >= NUMFUNCTIONS)
+    if (index >= NUMFUNCTIONS)
         return NULL;
     return &(function_table[index]);
 }
