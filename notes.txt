@@ -171,6 +171,7 @@ key as meta key" preference.)
     caused no problems in practice.)
     Added an optional timegm() function that you can compile in if your
     platform lacks it. (#define NO_TIMEGM_AVAIL)
+    Removed old, deprecated tmpnam() call.
 
 1.0.4:
     Updated the Blorb-resource functions to understand FORM chunks
