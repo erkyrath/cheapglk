@@ -8,6 +8,10 @@
 
 #ifdef GLK_MODULE_DATETIME
 
+#ifdef NO_TIMEGM_AVAIL
+extern time_t timegm(struct tm *tm);
+#endif /* NO_TIMEGM_AVAIL */
+
 #ifdef WIN32
 /* Some alterations to make this code work on Windows, in case that's helpful
    to you. */
@@ -256,6 +260,31 @@ glsi32 glk_date_to_simple_time_local(glkdate_t *date, glui32 factor)
 
     return gli_simplify_time(timestamp, factor);
 }
+
+#ifdef NO_TIMEGM_AVAIL
+/* If you have no timegm() function, you can #define NO_TIMEGM_AVAIL to
+   get this definition. */
+
+time_t timegm(struct tm *tm)
+{
+    time_t res;
+    char *origtz;
+
+    origtz = getenv("TZ");
+    setenv("TZ", "", 1);
+    tzset();
+    res = mktime(tm);
+    if (origtz)
+        setenv("TZ", origtz, 1);
+    else
+        unsetenv("TZ");
+    tzset();
+
+    return res;
+}
+
+#endif /* NO_TIMEGM_AVAIL */
+
 
 #ifdef WIN32
 /* Windows needs wrappers for time functions to handle pre-epoch dates */

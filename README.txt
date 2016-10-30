@@ -1,6 +1,6 @@
 CheapGlk: Cheapass Implementation of the Glk API.
 
-CheapGlk Library: version 1.0.4.
+CheapGlk Library: version 1.0.5.
 Glk API which this implements: version 0.7.4.
 Designed by Andrew Plotkin <erkyrath@eblong.com>
 http://eblong.com/zarf/glk/index.html
@@ -168,12 +168,17 @@ key as meta key" preference.)
 
 * Version History
 
-1.0.5###:
+###:
+    Added support for a "debug console". If -D option is given, lines
+    beginning with "/" are considered debug commands.
+
+1.0.5:
     Text-mode Unicode file streams are now read and written in UTF-8.
     Fixed a struct initialization bug in gli_date_to_tm(). (I think this
     caused no problems in practice.)
-    Added support for a "debug console". If -D option is given, lines
-    beginning with "/" are considered debug commands.
+    Added an optional timegm() function that you can compile in if your
+    platform lacks it. (#define NO_TIMEGM_AVAIL)
+    Removed old, deprecated tmpnam() call.
 
 1.0.4:
     Updated the Blorb-resource functions to understand FORM chunks
@@ -261,11 +266,6 @@ key as meta key" preference.)
 
 * Permissions
 
-The source code in this package is copyright 1998-2012 by Andrew Plotkin. You
-may copy and distribute it freely, by any means and under any conditions,
-as long as the code and documentation is not changed. You may also
-incorporate this code into your own program and distribute that, or modify
-this code and use and distribute the modified version, as long as you retain
-a notice in your program or documentation which mentions my name and the
-URL shown above.
-
+The CheapGlk, GiDispa, and GiBlorb libraries, as well as the glk.h header
+file, are copyright 1998-2016 by Andrew Plotkin. They are distributed under
+the MIT license; see the "LICENSE" file.

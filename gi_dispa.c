@@ -2,13 +2,8 @@
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://eblong.com/zarf/glk/
 
-    This file is copyright 1998-2012 by Andrew Plotkin. You may copy,
-    distribute, and incorporate it into your own programs, by any means
-    and under any conditions, as long as you do not modify it. You may
-    also modify this file, incorporate it into your own programs,
-    and distribute the modified version, as long as you retain a notice
-    in your program or documentation which mentions my name and the URL
-    shown above.
+    This file is copyright 1998-2012 by Andrew Plotkin. It is
+    distributed under the MIT license; see the "LICENSE" file.
 */
 
 /* This code should be linked into every Glk library, without change. 
@@ -331,7 +326,7 @@ glui32 gidispatch_count_classes()
 
 gidispatch_intconst_t *gidispatch_get_class(glui32 index)
 {
-    if (index < 0 || index >= NUMCLASSES)
+    if (index >= NUMCLASSES)
         return NULL;
     return &(class_table[index]);
 }
@@ -343,7 +338,7 @@ glui32 gidispatch_count_intconst()
 
 gidispatch_intconst_t *gidispatch_get_intconst(glui32 index)
 {
-    if (index < 0 || index >= NUMINTCONSTANTS)
+    if (index >= NUMINTCONSTANTS)
         return NULL;
     return &(intconstant_table[index]);
 }
@@ -355,7 +350,7 @@ glui32 gidispatch_count_functions()
 
 gidispatch_function_t *gidispatch_get_function(glui32 index)
 {
-    if (index < 0 || index >= NUMFUNCTIONS)
+    if (index >= NUMFUNCTIONS)
         return NULL;
     return &(function_table[index]);
 }
