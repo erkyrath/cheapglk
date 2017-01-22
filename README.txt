@@ -270,5 +270,6 @@ key as meta key" preference.)
 * Permissions
 
 The CheapGlk, GiDispa, and GiBlorb libraries, as well as the glk.h header
-file, are copyright 1998-2016 by Andrew Plotkin. They are distributed under
-the MIT license; see the "LICENSE" file.
+file, are copyright 1998-2016 by Andrew Plotkin. The GiDebug library is
+copyright 2014-2017 by Andrew Plotkin. All are distributed under the MIT
+license; see the "LICENSE" file.
