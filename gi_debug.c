@@ -1,5 +1,5 @@
 /* gi_debug.c: Debug feature layer for Glk API.
-    gi_debug version 0.9.5
+    gi_debug version 0.9.5.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://eblong.com/zarf/glk/
 
