@@ -42,6 +42,9 @@
     of #ifdefs to make sure that everything builds in all
     configurations.
 
+    (This is why the gi_debug.c and .h files are so tiny! All they do
+    is glue together Glk library and game (interpreter) code.)
+
     Library side: If the library supports debugging, the
     GIDEBUG_LIBRARY_SUPPORT #define in this header (gi_debug.h) will
     be present (not commented out). By doing this, the library
