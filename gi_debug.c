@@ -1,3 +1,12 @@
+/* gi_debug.c: Debug feature layer for Glk API.
+    gi_debug version 0.9.5
+    Designed by Andrew Plotkin <erkyrath@eblong.com>
+    http://eblong.com/zarf/glk/
+
+    This file is copyright 2014-7 by Andrew Plotkin. It is
+    distributed under the MIT license; see the "LICENSE" file.
+*/
+
 #include "glk.h"
 #include "gi_debug.h"
 
