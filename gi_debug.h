@@ -2,11 +2,11 @@
 #define _GI_DEBUG_H
 
 /* gi_debug.h: Debug feature layer for Glk API.
-    gi_debug version 0.9.0
+    gi_debug version 0.9.5
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://eblong.com/zarf/glk/
 
-    This file is copyright 2014 by Andrew Plotkin. You may copy,
+    This file is copyright 2014-7 by Andrew Plotkin. You may copy,
     distribute, and incorporate it into your own programs, by any means
     and under any conditions, as long as you do not modify it. You may
     also modify this file, incorporate it into your own programs,
@@ -17,13 +17,23 @@
     ------------------------------------------------
 
     The debug module allows a Glk library to send out-of-band debug
-    commands to the game program it's linked to. (Most familiarly this
-    is a Glulx interpreter, but it doesn't have to be.) The program
-    returns debug output to the library, which can then display it.
+    commands to the game program it's linked to. The program returns
+    debug output to the library, which can then display it.
+
+    (Note: 98% of the time, the "game program" is an IF interpreter
+    such as Glulxe. In such cases, debug commands are handled by the
+    interpreter; they do *not* get passed through to the interpreted
+    game file. Debug commands may do things like pause, inspect, or
+    change the state of the interpreted game.)
 
     As with all UI decision, the interface of the debug feature is
     left up to the Glk library. Abstractly, we imagine a "debug
     console" window with its own input line and scrolling text output.
+
+    (If at all possible, avoid trying to parse debug commands out of
+    regular game input! The CheapGlk library does this, but that's
+    because it's cheap. It's much better to provide a separate window
+    outside the regular game UI.)
 
     * Configuration
 
