@@ -150,6 +150,8 @@ libraries.) These gli_ functions (and other internal constants and
 structures) are declared in cheapglk.h.
 
 The files gi_dispa.c and gi_dispa.h are the Glk dispatch layer.
+gi_blorb.c,h are the Blorb utility functions, and gi_debug.c,h are
+the debug console interface.
 
 As you can see from the code, I've kept a policy of catching every error
 that I can possibly catch, and printing visible warnings.
@@ -168,9 +170,10 @@ key as meta key" preference.)
 
 * Version History
 
-###:
-    Added support for a "debug console". If -D option is given, lines
-    beginning with "/" are considered debug commands.
+1.0.6###:
+    Added support for a "debug console". If the -D option is given, lines
+    beginning with "/" are considered debug commands. (This is not
+    interesting unless the interpreter is compiled with debug support.)
 
 1.0.5:
     Text-mode Unicode file streams are now read and written in UTF-8.
