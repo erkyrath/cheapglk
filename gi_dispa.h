@@ -94,4 +94,18 @@ extern glui32 gidispatch_count_functions(void);
 extern gidispatch_function_t *gidispatch_get_function(glui32 index);
 extern gidispatch_function_t *gidispatch_get_function_by_id(glui32 id);
 
+#define GI_DISPA_GAME_ID_AVAILABLE
+/* These function is not part of Glk dispatching per se; they allow the
+   game to provide an identifier string for the Glk library to use.
+   The functions themselves are in gi_dispa.c.
+
+   The game should test ifdef GI_DISPA_GAME_ID_AVAILABLE to ensure that
+   these functions exist. (They are a late addition to gi_dispa.c, so
+   older Glk library distributions will lack them.)
+*/
+#ifdef GI_DISPA_GAME_ID_AVAILABLE
+extern void gidispatch_set_game_id_hook(char *(*hook)(void));
+extern char *gidispatch_get_game_id(void);
+#endif /* GI_DISPA_GAME_ID_AVAILABLE */
+
 #endif /* _GI_DISPA_H */
