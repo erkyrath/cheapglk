@@ -1,4 +1,4 @@
-/* gi_dispa.c: Dispatch layer for Glk API, version 0.7.4.
+/* gi_dispa.c: Dispatch layer for Glk API, version 0.7.5.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://eblong.com/zarf/glk/
 
