@@ -2,11 +2,11 @@
 #define _GI_BLORB_H
 
 /* gi_blorb.h: Blorb library layer for Glk API.
-    gi_blorb version 1.5.1.
+    gi_blorb version 1.6.0.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://eblong.com/zarf/glk/
 
-    This file is copyright 1998-2012 by Andrew Plotkin. It is
+    This file is copyright 1998-2017 by Andrew Plotkin. It is
     distributed under the MIT license; see the "LICENSE" file.
 */
 
@@ -39,6 +39,8 @@ typedef glui32 giblorb_err_t;
 #define giblorb_ID_ANNO      (giblorb_make_id('A', 'N', 'N', 'O'))
 #define giblorb_ID_TEXT      (giblorb_make_id('T', 'E', 'X', 'T'))
 #define giblorb_ID_BINA      (giblorb_make_id('B', 'I', 'N', 'A'))
+#define giblorb_ID_JPEG      (giblorb_make_id('J', 'P', 'E', 'G'))
+#define giblorb_ID_PNG       (giblorb_make_id('P', 'N', 'G', ' '))
 
 /* giblorb_map_t: Holds the complete description of an open Blorb 
     file. This type is opaque for normal interpreter use. */
@@ -58,6 +60,13 @@ typedef struct giblorb_result_struct {
     glui32 chunktype; /* The type of the chunk. */
 } giblorb_result_t;
 
+typedef struct giblorb_image_info_struct {
+    glui32 chunktype;
+    glui32 width;
+    glui32 height;
+    char *alttext;
+} giblorb_image_info_t;
+
 extern giblorb_err_t giblorb_create_map(strid_t file, 
     giblorb_map_t **newmap);
 extern giblorb_err_t giblorb_destroy_map(giblorb_map_t *map);
@@ -75,6 +84,9 @@ extern giblorb_err_t giblorb_load_resource(giblorb_map_t *map,
     glui32 resnum);
 extern giblorb_err_t giblorb_count_resources(giblorb_map_t *map, 
     glui32 usage, glui32 *num, glui32 *min, glui32 *max);
+
+extern giblorb_err_t giblorb_load_image_info(giblorb_map_t *map,
+    glui32 resnum, giblorb_image_info_t *res);
 
 /* The following functions are part of the Glk library itself, not 
     the Blorb layer (whose code is in gi_blorb.c). These functions 
