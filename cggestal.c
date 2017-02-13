@@ -15,8 +15,8 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr,
     switch (id) {
         
         case gestalt_Version:
-            /* This implements Glk spec version 0.7.4. */
-            return 0x00000704;
+            /* This implements Glk spec version 0.7.5. */
+            return 0x00000705;
         
         case gestalt_LineInput:
             if (val >= 32 && val < 127)
@@ -69,6 +69,7 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr,
 
         case gestalt_Graphics:
         case gestalt_GraphicsTransparency:
+        case gestalt_GraphicsCharInput:
             return FALSE;
             
         case gestalt_DrawImage:
