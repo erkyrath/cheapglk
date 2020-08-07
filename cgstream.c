@@ -242,7 +242,10 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
         
     fl = fopen(fref->filename, modestr);
     if (!fl) {
-        gli_strict_warning("stream_open_file: unable to open file.");
+        /* According to recent spec discussion, we only display an error on missing files for write/append mode. In read mode, we return silently. */
+        if (fmode != filemode_Read) {
+            gli_strict_warning("stream_open_file: unable to open file.");
+        }
         return NULL;
     }
     
