@@ -267,7 +267,14 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
         char *suffix = gli_suffix_for_usage(usage);
         strcat(newbuf, suffix);
     }
-    
+
+    if (fmode == filemode_Read) {
+        /* According to recent spec discussion, we must silently return NULL if no such file exists. */
+        if (access(newbuf, R_OK)) {
+            return NULL;
+        }
+    }
+
     fref = gli_new_fileref(newbuf, usage, rock);
     if (!fref) {
         gli_strict_warning("fileref_create_by_prompt: unable to create fileref.");
