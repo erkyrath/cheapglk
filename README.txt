@@ -176,6 +176,7 @@ key as meta key" preference.)
     a open-for-reading prompt also returns null, rather than an invalid
     fileref. This brings the library more or less in line with the spec.
     See discussion: https://github.com/erkyrath/glk-dev/issues/6
+    Replace deprecated mktemp() call with mkstemp().
 
 1.0.6:
     Declared support for Glk spec 0.7.5.
