@@ -204,6 +204,7 @@ int main(int argc, char *argv[])
             }
         }
         printf("library options:\n");
+        printf("  -w NUM, -h NUM: pretend to be running in a terminal window of this size (default 80x24)\n");
         printf("  -u: assume input and output are UTF-8 encoded (default: Latin-1)\n");
         printf("  -ui, -uo: set UTF-8 mode for input and output separately\n");
         printf("  -q: don't display the \"Welcome to the Cheap Glk Implementation\" header line\n");
