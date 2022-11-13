@@ -203,6 +203,14 @@ int main(int argc, char *argv[])
                     printf("  %s: %s\n", argform->name, argform->desc);
             }
         }
+        printf("library options:\n");
+        printf("  -u: assume input and output are UTF-8 encoded (default: Latin-1)\n");
+        printf("  -ui, -uo: set UTF-8 mode for input and output separately\n");
+        printf("  -q: don't display the \"Welcome to the Cheap Glk Implementation\" header line\n");
+#if GIDEBUG_LIBRARY_SUPPORT
+        printf("  -D: turn on debug console\n");
+#endif /* GIDEBUG_LIBRARY_SUPPORT */
+        printf("  -help: display this list\n");
         return 1;
     }
     
