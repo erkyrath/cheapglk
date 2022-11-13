@@ -14,6 +14,13 @@ int gli_utf8input = FALSE;
 int gli_debugger = FALSE;
 #endif /* GIDEBUG_LIBRARY_SUPPORT */
 
+typedef struct dataresource_struct {
+    int num;
+    char *filename;
+} dataresource_t;
+static dataresource_t *dataresources = NULL;
+static int numdataresources = 0, dataresource_size = 0;
+
 static int inittime = FALSE;
 
 int main(int argc, char *argv[])
@@ -127,7 +134,7 @@ int main(int argc, char *argv[])
                     continue;
                 }
                 char *sep = strchr(argv[ix], ':');
-                if (!sep) {
+                if (!sep || sep == argv[ix] || *(sep+1) == '\0') {
                     printf("%s: -dataresource option requires NUM:FILENAME\n\n", argv[0]);
                     errflag = TRUE;
                     continue;
@@ -135,7 +142,18 @@ int main(int argc, char *argv[])
                 *sep = '\0';
                 sep++;
                 val = atoi(argv[ix]);
-                printf("### %d : %s\n", val, sep);
+                if (!dataresources || dataresource_size == 0) {
+                    dataresource_size = 4;
+                    dataresources = (dataresource_t *)malloc(dataresource_size * sizeof(dataresource_t));
+                }
+                else if (numdataresources >= dataresource_size) {
+                    dataresource_size *= 2;
+                    dataresources = (dataresource_t *)realloc(dataresources, dataresource_size * sizeof(dataresource_t));
+                }
+                dataresources[numdataresources].num = val;
+                dataresources[numdataresources].filename = strdup(sep);
+                printf("### %d : %s\n", dataresources[numdataresources].num, dataresources[numdataresources].filename);
+                numdataresources++;
                 continue;
             }
             switch (argv[ix][1]) {
@@ -226,6 +244,7 @@ int main(int argc, char *argv[])
         printf("  -w NUM, -h NUM: pretend to be running in a terminal window of this size (default 80x24)\n");
         printf("  -u: assume input and output are UTF-8 encoded (default: Latin-1)\n");
         printf("  -ui, -uo: set UTF-8 mode for input and output separately\n");
+        printf("  -dataresource NUM:FILENAME: tell where the data resource file with the given number can be read (default: search blorb if available)\n");
         printf("  -q: don't display the \"Welcome to the Cheap Glk Implementation\" header line\n");
 #if GIDEBUG_LIBRARY_SUPPORT
         printf("  -D: turn on debug console\n");
