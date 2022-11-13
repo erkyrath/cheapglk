@@ -119,6 +119,25 @@ int main(int argc, char *argv[])
             continue;
             
         if (argv[ix][0] == '-') {
+            if (!strcmp(argv[ix]+1, "dataresource")) {
+                ix++;
+                if (ix >= argc) {
+                    printf("%s: -dataresource option requires NUM:FILENAME\n\n", argv[0]);
+                    errflag = TRUE;
+                    continue;
+                }
+                char *sep = strchr(argv[ix], ':');
+                if (!sep) {
+                    printf("%s: -dataresource option requires NUM:FILENAME\n\n", argv[0]);
+                    errflag = TRUE;
+                    continue;
+                }
+                *sep = '\0';
+                sep++;
+                val = atoi(argv[ix]);
+                printf("### %d : %s\n", val, sep);
+                continue;
+            }
             switch (argv[ix][1]) {
                 case 'w':
                     val = 0;
