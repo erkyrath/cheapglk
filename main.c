@@ -16,6 +16,7 @@ int gli_debugger = FALSE;
 
 typedef struct dataresource_struct {
     int num;
+    int isbinary;
     char *filename;
 } dataresource_t;
 static dataresource_t *dataresources = NULL;
@@ -126,7 +127,10 @@ int main(int argc, char *argv[])
             continue;
             
         if (argv[ix][0] == '-') {
-            if (!strcmp(argv[ix]+1, "dataresource")) {
+            if (!strcmp(argv[ix]+1, "dataresource")
+                || !strcmp(argv[ix]+1, "dataresourcebin")
+                || !strcmp(argv[ix]+1, "dataresourcetext")) {
+                int isbinary = strcmp(argv[ix]+1, "dataresourcetext") != 0;
                 ix++;
                 if (ix >= argc) {
                     printf("%s: -dataresource option requires NUM:FILENAME\n\n", argv[0]);
@@ -151,8 +155,9 @@ int main(int argc, char *argv[])
                     dataresources = (dataresource_t *)realloc(dataresources, dataresource_size * sizeof(dataresource_t));
                 }
                 dataresources[numdataresources].num = val;
+                dataresources[numdataresources].isbinary = isbinary;
                 dataresources[numdataresources].filename = strdup(sep);
-                printf("### %d : %s\n", dataresources[numdataresources].num, dataresources[numdataresources].filename);
+                printf("### %d (%c) : %s\n", dataresources[numdataresources].num, (dataresources[numdataresources].isbinary ? 'b' : 't'), dataresources[numdataresources].filename);
                 numdataresources++;
                 continue;
             }
@@ -244,7 +249,8 @@ int main(int argc, char *argv[])
         printf("  -w NUM, -h NUM: pretend to be running in a terminal window of this size (default 80x24)\n");
         printf("  -u: assume input and output are UTF-8 encoded (default: Latin-1)\n");
         printf("  -ui, -uo: set UTF-8 mode for input and output separately\n");
-        printf("  -dataresource NUM:FILENAME: tell where the data resource file with the given number can be read (default: search blorb if available)\n");
+        printf("  -dataresource NUM:FILENAME, -dataresourcebin NUM:FILENAME, -dataresourcetext NUM:FILENAME: tell where the data resource file with the given number can be read (default: search blorb if available)\n");
+        printf("     (file is considered binary by default, or text if -dataresourcetext is used)\n");
         printf("  -q: don't display the \"Welcome to the Cheap Glk Implementation\" header line\n");
 #if GIDEBUG_LIBRARY_SUPPORT
         printf("  -D: turn on debug console\n");
