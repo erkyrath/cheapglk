@@ -333,6 +333,19 @@ strid_t glk_stream_open_resource(glui32 filenum, glui32 rock)
     int isbinary;
     giblorb_err_t err;
     giblorb_result_t res;
+
+    char *pathname = gli_get_dataresource_pathname(filenum, &isbinary);
+    if (pathname) {
+        str = gli_stream_open_pathname(pathname, FALSE, !isbinary, rock);
+        if (!str) {
+            gli_strict_warning("stream_open_resource: unable to open command-line resource pathname.");
+            return NULL;
+        }
+        return str;
+    }
+
+    /* No explicit path; check blorb. */
+    
     giblorb_map_t *map = giblorb_get_resource_map();
     if (!map)
         return 0; /* Not running from a blorb file */
@@ -389,6 +402,20 @@ strid_t glk_stream_open_resource_uni(glui32 filenum, glui32 rock)
     int isbinary;
     giblorb_err_t err;
     giblorb_result_t res;
+
+    char *pathname = gli_get_dataresource_pathname(filenum, &isbinary);
+    if (pathname) {
+        str = gli_stream_open_pathname(pathname, FALSE, !isbinary, rock);
+        if (!str) {
+            gli_strict_warning("stream_open_resource: unable to open command-line resource pathname.");
+            return NULL;
+        }
+        str->unicode = TRUE;
+        return str;
+    }
+
+    /* No explicit path; check blorb. */
+    
     giblorb_map_t *map = giblorb_get_resource_map();
     if (!map)
         return 0; /* Not running from a blorb file */
