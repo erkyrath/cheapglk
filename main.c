@@ -17,7 +17,7 @@ int gli_debugger = FALSE;
 typedef struct dataresource_struct {
     int num;
     int isbinary;
-    char *filename;
+    char *pathname;
 } dataresource_t;
 static dataresource_t *dataresources = NULL;
 static int numdataresources = 0, dataresource_size = 0;
@@ -133,13 +133,13 @@ int main(int argc, char *argv[])
                 int isbinary = strcmp(argv[ix]+1, "dataresourcetext") != 0;
                 ix++;
                 if (ix >= argc) {
-                    printf("%s: -dataresource option requires NUM:FILENAME\n\n", argv[0]);
+                    printf("%s: -dataresource option requires NUM:PATHNAME\n\n", argv[0]);
                     errflag = TRUE;
                     continue;
                 }
                 char *sep = strchr(argv[ix], ':');
                 if (!sep || sep == argv[ix] || *(sep+1) == '\0') {
-                    printf("%s: -dataresource option requires NUM:FILENAME\n\n", argv[0]);
+                    printf("%s: -dataresource option requires NUM:PATHNAME\n\n", argv[0]);
                     errflag = TRUE;
                     continue;
                 }
@@ -156,8 +156,8 @@ int main(int argc, char *argv[])
                 }
                 dataresources[numdataresources].num = val;
                 dataresources[numdataresources].isbinary = isbinary;
-                dataresources[numdataresources].filename = strdup(sep);
-                printf("### %d (%c) : %s\n", dataresources[numdataresources].num, (dataresources[numdataresources].isbinary ? 'b' : 't'), dataresources[numdataresources].filename);
+                dataresources[numdataresources].pathname = strdup(sep);
+                printf("### %d (%c) : %s\n", dataresources[numdataresources].num, (dataresources[numdataresources].isbinary ? 'b' : 't'), dataresources[numdataresources].pathname);
                 numdataresources++;
                 continue;
             }
@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
         printf("  -w NUM, -h NUM: pretend to be running in a terminal window of this size (default 80x24)\n");
         printf("  -u: assume input and output are UTF-8 encoded (default: Latin-1)\n");
         printf("  -ui, -uo: set UTF-8 mode for input and output separately\n");
-        printf("  -dataresource NUM:FILENAME, -dataresourcebin NUM:FILENAME, -dataresourcetext NUM:FILENAME: tell where the data resource file with the given number can be read (default: search blorb if available)\n");
+        printf("  -dataresource NUM:PATHNAME, -dataresourcebin NUM:PATHNAME, -dataresourcetext NUM:PATHNAME: tell where the data resource file with the given number can be read (default: search blorb if available)\n");
         printf("     (file is considered binary by default, or text if -dataresourcetext is used)\n");
         printf("  -q: don't display the \"Welcome to the Cheap Glk Implementation\" header line\n");
 #if GIDEBUG_LIBRARY_SUPPORT
@@ -287,6 +287,23 @@ int main(int argc, char *argv[])
     /* glk_exit() doesn't return, but the compiler may kvetch if main()
         doesn't seem to return a value. */
     return 0;
+}
+
+/* Get the pathname for data chunk num (as specified in command-line arguments,
+   if any).
+*/
+char *gli_get_dataresource_pathname(int num, int *isbinary)
+{
+    int ix;
+    for (ix=0; ix<numdataresources; ix++) {
+        if (dataresources[ix].num == num) {
+            if (isbinary)
+                *isbinary = dataresources[ix].isbinary;
+            return dataresources[ix].pathname;
+        }
+    }
+
+    return NULL;
 }
 
 /* This opens a file for reading or writing. (You cannot open a file
