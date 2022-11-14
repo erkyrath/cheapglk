@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
 char *gli_get_dataresource_pathname(int num, int *isbinary)
 {
     int ix;
-    /* The dataresources isn't sorted (or even checked for duplicates),
+    /* The dataresources array isn't sorted (or even checked for duplicates),
        so we search it linearly. There probably aren't a lot of entries. */
     for (ix=0; ix<numdataresources; ix++) {
         if (dataresources[ix].num == num) {
