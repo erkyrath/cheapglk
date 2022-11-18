@@ -51,7 +51,7 @@ extern int gli_debugger;
 /* Get the pathname for data chunk num (as specified in command-line arguments,
    if any).
 */
-extern char *gli_get_dataresource_pathname(int num, int *isbinary);
+extern int gli_get_dataresource_info(int num, void **ptr, glui32 *len, int *isbinary);
 
 /* Callbacks necessary for the dispatch layer. */
 extern gidispatch_rock_t (*gli_register_obj)(void *obj, glui32 objclass);

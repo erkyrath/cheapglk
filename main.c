@@ -18,6 +18,8 @@ typedef struct dataresource_struct {
     int num;
     int isbinary;
     char *pathname;
+    int len;
+    void *ptr;
 } dataresource_t;
 static dataresource_t *dataresources = NULL;
 static int numdataresources = 0, dataresource_size = 0;
@@ -157,7 +159,8 @@ int main(int argc, char *argv[])
                 dataresources[numdataresources].num = val;
                 dataresources[numdataresources].isbinary = isbinary;
                 dataresources[numdataresources].pathname = strdup(sep);
-                printf("### %d (%c) : %s\n", dataresources[numdataresources].num, (dataresources[numdataresources].isbinary ? 'b' : 't'), dataresources[numdataresources].pathname);
+                dataresources[numdataresources].ptr = NULL;
+                dataresources[numdataresources].len = 0;
                 numdataresources++;
                 continue;
             }
@@ -289,23 +292,49 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-/* Get the pathname for data chunk num (as specified in command-line arguments,
+/* Get the data for data chunk num (as specified in command-line arguments,
    if any).
+   The data is read from the given pathname and stashed in memory.
+   This is memory-hoggish, but so is the rest of glk_stream_open_resource();
+   see comments there.
 */
-char *gli_get_dataresource_pathname(int num, int *isbinary)
+int gli_get_dataresource_info(int num, void **ptr, glui32 *len, int *isbinary)
 {
     int ix;
     /* The dataresources array isn't sorted (or even checked for duplicates),
        so we search it linearly. There probably aren't a lot of entries. */
     for (ix=0; ix<numdataresources; ix++) {
         if (dataresources[ix].num == num) {
-            if (isbinary)
-                *isbinary = dataresources[ix].isbinary;
-            return dataresources[ix].pathname;
+            *isbinary = dataresources[ix].isbinary;
+            *ptr = NULL;
+            *len = 0;
+            if (dataresources[ix].ptr) {
+                /* Already loaded. */
+            }
+            else {
+                FILE *fl = fopen(dataresources[ix].pathname, "rb");
+                if (!fl) {
+                    gli_strict_warning("stream_open_resource: unable to read given pathname.");
+                    return FALSE;
+                }
+                fseek(fl, 0, SEEK_END);
+                dataresources[ix].len = ftell(fl);
+                dataresources[ix].ptr = malloc(dataresources[ix].len+1);
+                fseek(fl, 0, SEEK_SET);
+                int got = fread(dataresources[ix].ptr, 1, dataresources[ix].len, fl);
+                fclose(fl);
+                if (got != dataresources[ix].len) {
+                    gli_strict_warning("stream_open_resource: unable to read all resource data.");
+                    return FALSE;
+                }
+            }
+            *ptr = dataresources[ix].ptr;
+            *len = dataresources[ix].len;
+            return TRUE;
         }
     }
 
-    return NULL;
+    return FALSE;
 }
 
 /* This opens a file for reading or writing. (You cannot open a file
