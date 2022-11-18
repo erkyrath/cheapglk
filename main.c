@@ -297,6 +297,10 @@ int main(int argc, char *argv[])
    The data is read from the given pathname and stashed in memory.
    This is memory-hoggish, but so is the rest of glk_stream_open_resource();
    see comments there.
+   (You might wonder why we don't call gli_stream_open_pathname() and
+   handle the file as a file-based stream. Turns out that doesn't work;
+   the handling of unicode streams is subtly different for resource
+   streams and the file-based code won't work. Oh well.)
 */
 int gli_get_dataresource_info(int num, void **ptr, glui32 *len, int *isbinary)
 {
