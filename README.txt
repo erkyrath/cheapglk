@@ -28,6 +28,14 @@ newlines.)
     -uo: Generate UTF-8 encoded text on stdout.
     -u: Both of the above.
 
+    -dataresource NUM:PATHNAME: Where to look for binary data resource
+        file NUM. (If this is not supplied, but the game is blorbed,
+        the interpreter looks for a DATA chunk in the Blorb file.)
+    -dataresourcetext NUM:PATHNAME: Same, but the resource file is
+        assumed to be text.
+    -dataresourcebin NUM:PATHNAME: Same as -dataresource. (Binary is
+        the default assumption.)
+
     -q: Don't display the "Welcome to CheapGlk" banner before the game.
 
     -D: Consider "/" to be a debug command prefix; all /commands are
