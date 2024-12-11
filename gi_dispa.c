@@ -257,20 +257,20 @@ static gidispatch_function_t function_table[] = {
     { 0x00F1, glk_schannel_get_rock, "schannel_get_rock" },
     { 0x00F2, glk_schannel_create, "schannel_create" },
     { 0x00F3, glk_schannel_destroy, "schannel_destroy" },
-#ifdef GLK_MODULE_SOUND2
+  #ifdef GLK_MODULE_SOUND2
     { 0x00F4, glk_schannel_create_ext, "schannel_create_ext" },
     { 0x00F7, glk_schannel_play_multi, "schannel_play_multi" },
-#endif /* GLK_MODULE_SOUND2 */
+  #endif /* GLK_MODULE_SOUND2 */
     { 0x00F8, glk_schannel_play, "schannel_play" },
     { 0x00F9, glk_schannel_play_ext, "schannel_play_ext" },
     { 0x00FA, glk_schannel_stop, "schannel_stop" },
     { 0x00FB, glk_schannel_set_volume, "schannel_set_volume" },
     { 0x00FC, glk_sound_load_hint, "sound_load_hint" },
-#ifdef GLK_MODULE_SOUND2
+  #ifdef GLK_MODULE_SOUND2
     { 0x00FD, glk_schannel_set_volume_ext, "schannel_set_volume_ext" },
     { 0x00FE, glk_schannel_pause, "schannel_pause" },
     { 0x00FF, glk_schannel_unpause, "schannel_unpause" },
-#endif /* GLK_MODULE_SOUND2 */
+  #endif /* GLK_MODULE_SOUND2 */
 #endif /* GLK_MODULE_SOUND */
 #ifdef GLK_MODULE_HYPERLINKS
     { 0x0100, glk_set_hyperlink, "set_hyperlink" },
@@ -282,10 +282,10 @@ static gidispatch_function_t function_table[] = {
     { 0x0120, glk_buffer_to_lower_case_uni, "buffer_to_lower_case_uni" },
     { 0x0121, glk_buffer_to_upper_case_uni, "buffer_to_upper_case_uni" },
     { 0x0122, glk_buffer_to_title_case_uni, "buffer_to_title_case_uni" },
-#ifdef GLK_MODULE_UNICODE_NORM
+  #ifdef GLK_MODULE_UNICODE_NORM
     { 0x0123, glk_buffer_canon_decompose_uni, "buffer_canon_decompose_uni" },
     { 0x0124, glk_buffer_canon_normalize_uni, "buffer_canon_normalize_uni" },
-#endif /* GLK_MODULE_UNICODE_NORM */
+  #endif /* GLK_MODULE_UNICODE_NORM */
     { 0x0128, glk_put_char_uni, "put_char_uni" },
     { 0x0129, glk_put_string_uni, "put_string_uni" },
     { 0x012A, glk_put_buffer_uni, "put_buffer_uni" },
@@ -297,9 +297,9 @@ static gidispatch_function_t function_table[] = {
     { 0x0132, glk_get_line_stream_uni, "get_line_stream_uni" },
     { 0x0138, glk_stream_open_file_uni, "stream_open_file_uni" },
     { 0x0139, glk_stream_open_memory_uni, "stream_open_memory_uni" },
-#ifdef GLK_MODULE_RESOURCE_STREAM
+  #ifdef GLK_MODULE_RESOURCE_STREAM
     { 0x013A, glk_stream_open_resource_uni, "stream_open_resource_uni" },
-#endif /* GLK_MODULE_RESOURCE_STREAM */
+  #endif /* GLK_MODULE_RESOURCE_STREAM */
     { 0x0140, glk_request_char_event_uni, "request_char_event_uni" },
     { 0x0141, glk_request_line_event_uni, "request_line_event_uni" },
 #endif /* GLK_MODULE_UNICODE */
