@@ -510,6 +510,17 @@ void glk_window_set_background_color(winid_t win, glui32 color)
     gli_strict_warning("window_set_background_color: graphics not supported.");
 }
 
+#ifdef GLK_MODULE_IMAGE2
+
+glui32 glk_image_draw_scaled_ext(winid_t win, glui32 image, 
+    glsi32 val1, glsi32 val2, glui32 width, glui32 height, glui32 flags)
+{
+    gli_strict_warning("image_draw_scaled_ext: graphics not supported.");
+    return FALSE;
+}
+
+#endif /* GLK_MODULE_IMAGE2 */
+
 #endif /* GLK_MODULE_IMAGE */
 
 #ifdef GLK_MODULE_HYPERLINKS

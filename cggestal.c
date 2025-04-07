@@ -73,6 +73,7 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr,
             return FALSE;
             
         case gestalt_DrawImage:
+        case gestalt_DrawImageScale:
             return FALSE;
             
         case gestalt_Unicode:
