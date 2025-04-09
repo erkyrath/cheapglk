@@ -102,7 +102,6 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "imagerule_WidthMask", (0x03) },
     { "imagerule_WidthOrig", (0x01) },
     { "imagerule_WidthRatio", (0x03) },
-    { "imagerule_WidthWindowMax", (0x10) },
 
     { "keycode_Delete",   (0xfffffff9) },
     { "keycode_Down",     (0xfffffffb) },
@@ -553,7 +552,7 @@ char *gidispatch_prototype(glui32 funcnum)
             return "2QaIu:";
 #ifdef GLK_MODULE_IMAGE2
         case 0x00EC: /* image_draw_scaled_ext */
-            return "8QaIuIsIsIuIuIu:Iu";
+            return "9QaIuIsIsIuIuIuIu:Iu";
 #endif /* GLK_MODULE_IMAGE2 */
 #endif /* GLK_MODULE_IMAGE */
 
@@ -1106,11 +1105,11 @@ void gidispatch_call(glui32 funcnum, glui32 numargs, gluniversal_t *arglist)
 
 #ifdef GLK_MODULE_IMAGE2
         case 0x00EC: /* image_draw_scaled_ext */
-            arglist[8].uint = glk_image_draw_scaled_ext(arglist[0].opaqueref, 
+            arglist[9].uint = glk_image_draw_scaled_ext(arglist[0].opaqueref, 
                 arglist[1].uint,
                 arglist[2].sint, arglist[3].sint,
                 arglist[4].uint, arglist[5].uint,
-                arglist[6].uint);
+                arglist[6].uint, arglist[7].uint);
             break;
 #endif /* GLK_MODULE_IMAGE2 */
 
