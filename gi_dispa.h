@@ -1,7 +1,7 @@
 #ifndef _GI_DISPA_H
 #define _GI_DISPA_H
 
-/* gi_dispa.h: Header file for dispatch layer of Glk API, version 0.7.5.
+/* gi_dispa.h: Header file for dispatch layer of Glk API, version 0.7.6.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
     http://eblong.com/zarf/glk/index.html
 

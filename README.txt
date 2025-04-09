@@ -1,7 +1,7 @@
 CheapGlk: Cheapass Implementation of the Glk API.
 
 CheapGlk Library: version 1.0.6.
-Glk API which this implements: version 0.7.5.
+Glk API which this implements: version 0.7.6.
 Designed by Andrew Plotkin <erkyrath@eblong.com>
 http://eblong.com/zarf/glk/index.html
 
@@ -179,6 +179,7 @@ key as meta key" preference.)
 * Version History
 
 1.0.###:
+    Declared support for Glk spec 0.7.6.
     Opening a nonexistent file for reading now silently returns null;
     is no error or warning. Entering the name of a nonexistent file at
     a open-for-reading prompt also returns null, rather than an invalid
