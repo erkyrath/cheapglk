@@ -912,7 +912,7 @@ static glsi32 gli_get_char(stream_t *str, int want_unicode)
     switch (str->type) {
         case strtype_Resource:
             if (str->unicode) {
-                glui32 ch;
+                glui32 ch = 0;
                 if (str->isbinary) {
                     /* cheap big-endian stream */
                     if (str->bufptr >= str->bufend)
@@ -988,7 +988,7 @@ static glsi32 gli_get_char(stream_t *str, int want_unicode)
             else if (str->isbinary) {
                 /* cheap big-endian stream */
                 int res;
-                glui32 ch;
+                glui32 ch = 0;
                 res = getc(str->file);
                 if (res == -1)
                     return -1;
@@ -1014,7 +1014,7 @@ static glsi32 gli_get_char(stream_t *str, int want_unicode)
                 /* slightly less cheap UTF-8 stream */
                 glui32 val0, val1, val2, val3;
                 int res;
-                glui32 ch;
+                glui32 ch = 0;
                 int flag = UTF8_DECODE_INLINE(&ch, (res=getc(str->file), res == -1), (res & 0xFF), val0, val1, val2, val3);
                 if (!flag)
                     return -1;
@@ -1040,7 +1040,7 @@ static glui32 gli_get_buffer(stream_t *str, char *cbuf, glui32 *ubuf,
             if (str->unicode) {
                 glui32 count = 0;
                 while (count < len) {
-                    glui32 ch;
+                    glui32 ch = 0;
                     if (str->isbinary) {
                         /* cheap big-endian stream */
                         if (str->bufptr >= str->bufend)
@@ -1212,7 +1212,7 @@ static glui32 gli_get_buffer(stream_t *str, char *cbuf, glui32 *ubuf,
                 for (lx=0; lx<len; lx++) {
                     glui32 val0, val1, val2, val3;
                     int res;
-                    glui32 ch;
+                    glui32 ch = 0;
                     int flag = UTF8_DECODE_INLINE(&ch, (res=getc(str->file), res == -1), (res & 0xFF), val0, val1, val2, val3);
                     if (!flag)
                         break;
@@ -1251,7 +1251,7 @@ static glui32 gli_get_line(stream_t *str, char *cbuf, glui32 *ubuf,
             if (str->unicode) {
                 glui32 count = 0;
                 while (count < len) {
-                    glui32 ch;
+                    glui32 ch = 0;
                     if (str->isbinary) {
                         /* cheap big-endian stream */
                         if (str->bufptr >= str->bufend)
@@ -1460,7 +1460,7 @@ static glui32 gli_get_line(stream_t *str, char *cbuf, glui32 *ubuf,
                 for (lx=0; lx<len && !gotnewline; lx++) {
                     glui32 val0, val1, val2, val3;
                     int res;
-                    glui32 ch;
+                    glui32 ch = 0;
                     int flag = UTF8_DECODE_INLINE(&ch, (res=getc(str->file), res == -1), (res & 0xFF), val0, val1, val2, val3);
                     if (!flag)
                         break;
